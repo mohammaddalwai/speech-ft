@@ -1,0 +1,20 @@
+
+dataset edinburghcstr/edacc @ d9ae7bd344f0562b766ec93ee5ce8f2f9568ce66
+dropped segments by reason: {'marker': 183, 'too_long': 573, 'empty': 1455} | merged into 'other': ['middle_eastern']
+search: {'within_tolerance': True, 'coverage': 26, 'max_rel_dev': 0.0068}
+  train:  12115 utts | 16.16 h |  76 speakers | 38 conversations
+  val  :   1690 utts |  2.30 h |  16 speakers |  8 conversations
+  test :   3121 utts |  4.57 h |  30 speakers | 15 conversations
+
+  group                             train              val             test
+  african                   8 spk  3.15 h    1 spk  0.24 h    1 spk  0.21 h
+  british_irish            11 spk  2.73 h    3 spk  0.34 h    6 spk  0.94 h
+  caribbean                 2 spk  0.39 h    2 spk  0.16 h    2 spk  0.35 h
+  east_southeast_asian     16 spk  2.41 h    3 spk  0.44 h    3 spk  0.44 h
+  european_other           15 spk  2.95 h    2 spk  0.25 h    5 spk  0.93 h
+  european_romance         14 spk  2.82 h    2 spk  0.22 h    7 spk  0.60 h
+  north_american            4 spk  0.49 h    2 spk  0.18 h    1 spk  0.00 h
+  other                     1 spk  0.43 h    0 spk  0.00 h    2 spk  0.78 h
+  south_asian               5 spk  0.79 h    1 spk  0.46 h    3 spk  0.33 h
+
+Gate 1 sample: 1000 val utterances

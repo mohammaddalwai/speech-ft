@@ -1,0 +1,112 @@
+{
+  "dataset": "edinburghcstr/edacc",
+  "revision": "d9ae7bd344f0562b766ec93ee5ce8f2f9568ce66",
+  "created": "2026-10-25",
+  "rules": {
+    "R1": "drop segments containing IGNORE_TIME_SEGMENT_IN_SCORING (untranscribed speech)",
+    "R1b": "drop segments containing <FOREIGN> (untranscribed foreign-language speech)",
+    "R2": "drop segments longer than 30 s (Whisper limit; no word timings to cut them)",
+    "R3": "drop segments that are empty after Whisper's English normalizer (tags only)",
+    "R6": "split by conversation {'train': 0.7, 'val': 0.1, 'test': 0.2}, best of 20000 random candidates (seed 0)",
+    "R7": "accent groups from configs/accent_groups.yaml; groups below min_speakers merged into 'other'"
+  },
+  "merged_into_other": [
+    "middle_eastern"
+  ],
+  "dropped_segments": {
+    "marker": 183,
+    "too_long": 573,
+    "empty": 1455
+  },
+  "search": {
+    "within_tolerance": true,
+    "coverage": 26,
+    "max_rel_dev": 0.0068
+  },
+  "gate1_sample": 1000,
+  "splits": {
+    "train": {
+      "utterances": 12115,
+      "hours": 16.16,
+      "speakers": 76,
+      "conversations": 38,
+      "hours_by_group": {
+        "african": 3.15,
+        "british_irish": 2.73,
+        "caribbean": 0.39,
+        "east_southeast_asian": 2.41,
+        "european_other": 2.95,
+        "european_romance": 2.82,
+        "north_american": 0.49,
+        "other": 0.43,
+        "south_asian": 0.79
+      },
+      "speakers_by_group": {
+        "african": 8,
+        "british_irish": 11,
+        "caribbean": 2,
+        "east_southeast_asian": 16,
+        "european_other": 15,
+        "european_romance": 14,
+        "north_american": 4,
+        "other": 1,
+        "south_asian": 5
+      }
+    },
+    "val": {
+      "utterances": 1690,
+      "hours": 2.3,
+      "speakers": 16,
+      "conversations": 8,
+      "hours_by_group": {
+        "african": 0.24,
+        "british_irish": 0.34,
+        "caribbean": 0.16,
+        "east_southeast_asian": 0.44,
+        "european_other": 0.25,
+        "european_romance": 0.22,
+        "north_american": 0.18,
+        "other": 0.0,
+        "south_asian": 0.46
+      },
+      "speakers_by_group": {
+        "african": 1,
+        "british_irish": 3,
+        "caribbean": 2,
+        "east_southeast_asian": 3,
+        "european_other": 2,
+        "european_romance": 2,
+        "north_american": 2,
+        "south_asian": 1
+      }
+    },
+    "test": {
+      "utterances": 3121,
+      "hours": 4.57,
+      "speakers": 30,
+      "conversations": 15,
+      "hours_by_group": {
+        "african": 0.21,
+        "british_irish": 0.94,
+        "caribbean": 0.35,
+        "east_southeast_asian": 0.44,
+        "european_other": 0.93,
+        "european_romance": 0.6,
+        "north_american": 0.0,
+        "other": 0.78,
+        "south_asian": 0.33
+      },
+      "speakers_by_group": {
+        "african": 1,
+        "british_irish": 6,
+        "caribbean": 2,
+        "east_southeast_asian": 3,
+        "european_other": 5,
+        "european_romance": 7,
+        "north_american": 1,
+        "other": 2,
+        "south_asian": 3
+      }
+    }
+  }
+}
