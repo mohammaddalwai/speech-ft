@@ -7,7 +7,7 @@
     "R1b": "drop segments containing <FOREIGN> (untranscribed foreign-language speech)",
     "R2": "drop segments longer than 30 s (Whisper limit; no word timings to cut them)",
     "R3": "drop segments that are empty after Whisper's English normalizer (tags only)",
-    "R6": "split by conversation {'train': 0.7, 'val': 0.1, 'test': 0.2}, best of 20000 random candidates (seed 0)",
+    "R6": "split by conversation {'train': 0.7, 'val': 0.1, 'test': 0.2}, best of 20000 random candidates (seed 0): val/test hours within 15% of target, then up to 2 speakers per group in test, then every group in train, then in val, then closest hours; a speaker counts only with >= 2 min",
     "R7": "accent groups from configs/accent_groups.yaml; groups below min_speakers merged into 'other'"
   },
   "merged_into_other": [
@@ -20,90 +20,91 @@
   },
   "search": {
     "within_tolerance": true,
-    "coverage": 26,
-    "max_rel_dev": 0.0068
+    "test_coverage": "18/18",
+    "train_coverage": "9/9",
+    "val_coverage": "7/9",
+    "max_rel_dev": 0.0371
   },
   "gate1_sample": 1000,
   "splits": {
     "train": {
-      "utterances": 12115,
-      "hours": 16.16,
-      "speakers": 76,
-      "conversations": 38,
+      "utterances": 11771,
+      "hours": 15.94,
+      "speakers": 78,
+      "conversations": 39,
       "hours_by_group": {
-        "african": 3.15,
-        "british_irish": 2.73,
-        "caribbean": 0.39,
-        "east_southeast_asian": 2.41,
-        "european_other": 2.95,
-        "european_romance": 2.82,
-        "north_american": 0.49,
+        "african": 1.86,
+        "british_irish": 2.94,
+        "caribbean": 0.35,
+        "east_southeast_asian": 1.84,
+        "european_other": 3.59,
+        "european_romance": 3.14,
+        "north_american": 0.37,
         "other": 0.43,
-        "south_asian": 0.79
+        "south_asian": 1.42
       },
       "speakers_by_group": {
-        "african": 8,
-        "british_irish": 11,
+        "african": 5,
+        "british_irish": 14,
         "caribbean": 2,
-        "east_southeast_asian": 16,
-        "european_other": 15,
-        "european_romance": 14,
-        "north_american": 4,
+        "east_southeast_asian": 12,
+        "european_other": 17,
+        "european_romance": 18,
+        "north_american": 3,
         "other": 1,
-        "south_asian": 5
+        "south_asian": 6
       }
     },
     "val": {
-      "utterances": 1690,
-      "hours": 2.3,
+      "utterances": 1804,
+      "hours": 2.39,
       "speakers": 16,
       "conversations": 8,
       "hours_by_group": {
-        "african": 0.24,
-        "british_irish": 0.34,
-        "caribbean": 0.16,
-        "east_southeast_asian": 0.44,
-        "european_other": 0.25,
+        "african": 0.42,
+        "british_irish": 0.42,
+        "caribbean": 0.39,
+        "east_southeast_asian": 0.71,
+        "european_other": 0.15,
         "european_romance": 0.22,
-        "north_american": 0.18,
+        "north_american": 0.07,
         "other": 0.0,
-        "south_asian": 0.46
+        "south_asian": 0.0
       },
       "speakers_by_group": {
-        "african": 1,
+        "african": 3,
         "british_irish": 3,
         "caribbean": 2,
-        "east_southeast_asian": 3,
-        "european_other": 2,
+        "east_southeast_asian": 4,
+        "european_other": 1,
         "european_romance": 2,
-        "north_american": 2,
-        "south_asian": 1
+        "north_american": 1
       }
     },
     "test": {
-      "utterances": 3121,
-      "hours": 4.57,
-      "speakers": 30,
-      "conversations": 15,
+      "utterances": 3351,
+      "hours": 4.7,
+      "speakers": 28,
+      "conversations": 14,
       "hours_by_group": {
-        "african": 0.21,
-        "british_irish": 0.94,
-        "caribbean": 0.35,
-        "east_southeast_asian": 0.44,
-        "european_other": 0.93,
-        "european_romance": 0.6,
-        "north_american": 0.0,
+        "african": 1.31,
+        "british_irish": 0.66,
+        "caribbean": 0.16,
+        "east_southeast_asian": 0.74,
+        "european_other": 0.39,
+        "european_romance": 0.29,
+        "north_american": 0.23,
         "other": 0.78,
-        "south_asian": 0.33
+        "south_asian": 0.15
       },
       "speakers_by_group": {
-        "african": 1,
-        "british_irish": 6,
+        "african": 2,
+        "british_irish": 3,
         "caribbean": 2,
-        "east_southeast_asian": 3,
-        "european_other": 5,
-        "european_romance": 7,
-        "north_american": 1,
+        "east_southeast_asian": 6,
+        "european_other": 4,
+        "european_romance": 3,
+        "north_american": 3,
         "other": 2,
         "south_asian": 3
       }
