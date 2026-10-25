@@ -1,0 +1,10 @@
+data/
+checkpoints/
+ct2-*/
+*.parquet
+*.wav
+*.flac
+.env
+.venv/
+__pycache__/
+.DS_Store
