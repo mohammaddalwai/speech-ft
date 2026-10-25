@@ -1,0 +1,13 @@
+# Accent groups for EdAcc, keyed by each speaker's first language (the `l1` column).
+# Proposed 2026-10-24 from metadata only, before any per-group WER was computed.
+# Spellings ("Ghanain", "Portoguese") are copied exactly from the dataset.
+groups:
+  british_irish: [Southern British English, Irish English, Scottish English, English]
+  north_american: [Mainstream US English]
+  african: [Nigerian English, Kenyan English, Ghanain English, South African English]
+  caribbean: [Jamaican English]
+  south_asian: [Indian English, Hindi, Urdu, Sinhalese]
+  east_southeast_asian: [Mandarin, Vietnamese, Bahasa, Indonesian, Japanese, Korean, Filipino, Tagalog]
+  european_romance: [Italian, Spanish, Spanish (Mexican), Catalan, French, Portoguese]
+  european_other: [Romanian, Polish, Bulgarian, Russian, Montenegrin, Macedonian, Lithuanian, German, Dutch, Icelandic, Maltese]
+  middle_eastern: [Arabic, Hebrew]
