@@ -1,0 +1,6 @@
+# Serving image only (Phase 4, CPU, Docker). Versions checked on PyPI 2026-10-21.
+faster-whisper==1.2.1
+ctranslate2==4.8.3
+fastapi==0.159.1
+uvicorn==0.54.0
+python-multipart==0.0.32
