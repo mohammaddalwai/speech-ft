@@ -1,8 +1,14 @@
 # Accent groups for EdAcc, keyed by each speaker's first language (the `l1` column).
-# Proposed 2026-10-24 from metadata only, before any per-group WER was computed.
+# Fixed 2026-10-24 from metadata and speaker counts only, before any per-group WER was computed.
 # Spellings ("Ghanain", "Portoguese") are copied exactly from the dataset.
+
+min_speakers: 4   # groups with fewer speakers are merged into "other" (decided by speaker count, never by WER)
+
+speaker_overrides:
+  EDACC-C39-A: east_southeast_asian   # l1 is just "English", accent is "Indonesian English"
+
 groups:
-  british_irish: [Southern British English, Irish English, Scottish English, English]
+  british_irish: [Southern British English, Irish English, Scottish English]
   north_american: [Mainstream US English]
   african: [Nigerian English, Kenyan English, Ghanain English, South African English]
   caribbean: [Jamaican English]
