@@ -21,8 +21,10 @@ import soundfile as sf
 import yaml
 
 REPO = "edinburghcstr/edacc"
+REVISION = "d9ae7bd344f0562b766ec93ee5ce8f2f9568ce66"  # pinned: utterance ids refer to this dataset version
 SEED = 0
 N_CANDIDATES = 20000
+MIN_SPK_MIN = 2.0     # a speaker counts toward a group in a split only with >= 2 minutes of usable audio
 TARGETS = {"train": 0.70, "val": 0.10, "test": 0.20}  # share of usable hours, split by conversation
 MAX_DEV = 0.15        # val and test hours must be within 15% (relative) of their targets
 MAX_SEC = 30.0
@@ -33,7 +35,9 @@ RULES = {
     "R1b": "drop segments containing <FOREIGN> (untranscribed foreign-language speech)",
     "R2": f"drop segments longer than {MAX_SEC:.0f} s (Whisper limit; no word timings to cut them)",
     "R3": "drop segments that are empty after Whisper's English normalizer (tags only)",
-    "R6": f"split by conversation {TARGETS}, best of {N_CANDIDATES} random candidates (seed {SEED})",
+    "R6": (f"split by conversation {TARGETS}, best of {N_CANDIDATES} random candidates (seed {SEED}): "
+           f"val/test hours within {MAX_DEV:.0%} of target, then up to 2 speakers per group in test, then every "
+           f"group in train, then in val, then closest hours; a speaker counts only with >= {MIN_SPK_MIN:.0f} min"),
     "R7": "accent groups from configs/accent_groups.yaml; groups below min_speakers merged into 'other'",
 }
 
@@ -77,12 +81,15 @@ def assign_groups(rows, cfg):
 
 # ---------- split search ----------
 def conversation_info(usable, group):
-    info = collections.defaultdict(lambda: {"hours": 0.0, "groups": set()})
-    for r in usable:
-        c = info[r["conversation"]]
-        c["hours"] += r["duration"] / 3600
-        c["groups"].add(group[r["speaker"]])
-    return dict(info)
+    """Per conversation: usable hours and the speakers who count toward a group (>= MIN_SPK_MIN minutes)."""
+    secs = collections.defaultdict(lambda: collections.defaultdict(float))
+    for r in sorted(usable, key=lambda r: r["utt_id"]):  # fixed order so float sums are reproducible
+        secs[r["conversation"]][r["speaker"]] += float(r["duration"])
+    info = {}
+    for c, spk in secs.items():
+        info[c] = {"hours": round(sum(spk.values()) / 3600, 6),
+                   "groups": [group[s] for s, t in sorted(spk.items()) if t / 60 >= MIN_SPK_MIN]}
+    return info
 
 
 def candidate(convs, info, total, rng):
@@ -102,28 +109,34 @@ def candidate(convs, info, total, rng):
     return assign, h
 
 
-def score(assign, h, info, total):
+def score(assign, h, info, total, groups):
     dev = max(abs(h[s] / total - TARGETS[s]) / TARGETS[s] for s in ("val", "test"))
-    cov = collections.defaultdict(set)
+    n = {s: collections.Counter() for s in TARGETS}
     for c, s in assign.items():
-        cov[s] |= info[c]["groups"]
-    coverage = sum(len(g) for g in cov.values())  # group-split pairs that exist
-    return dev, coverage
+        n[s].update(info[c]["groups"])
+    test_cov = sum(min(n["test"][g], 2) for g in groups)   # up to 2 counted speakers per group in test
+    train_cov = sum(min(n["train"][g], 1) for g in groups)
+    val_cov = sum(min(n["val"][g], 1) for g in groups)
+    return dev, test_cov, train_cov, val_cov
 
 
 def choose_split(info, seed=SEED, n=N_CANDIDATES):
     rng = random.Random(seed)
     total = sum(c["hours"] for c in info.values())
+    groups = sorted({g for c in info.values() for g in c["groups"]})
     best, best_key = None, None
     for _ in range(n):
         assign, h = candidate(list(info), info, total, rng)
-        dev, coverage = score(assign, h, info, total)
-        key = (dev <= MAX_DEV, coverage, -dev)  # within tolerance first, then coverage, then closest hours
+        dev, test_cov, train_cov, val_cov = score(assign, h, info, total, groups)
+        key = (dev <= MAX_DEV, test_cov, train_cov, val_cov, -dev)
         if best_key is None or key > best_key:
             best, best_key = assign, key
     if not best_key[0]:
         print(f"WARNING: no candidate within {MAX_DEV:.0%} of target hours; using the closest one.")
-    return best, {"within_tolerance": best_key[0], "coverage": best_key[1], "max_rel_dev": round(-best_key[2], 4)}
+    stats = {"within_tolerance": best_key[0], "test_coverage": f"{best_key[1]}/{2 * len(groups)}",
+             "train_coverage": f"{best_key[2]}/{len(groups)}", "val_coverage": f"{best_key[3]}/{len(groups)}",
+             "max_rel_dev": round(-best_key[4], 4)}
+    return best, stats
 
 
 # ---------- outputs ----------
@@ -187,7 +200,10 @@ def main():
 
     with open("configs/accent_groups.yaml") as f:
         cfg = yaml.safe_load(f)
-    revision = HfApi().dataset_info(REPO).sha  # pin the exact dataset version the utterance ids refer to
+    latest = HfApi().dataset_info(REPO).sha
+    if latest != REVISION:
+        print(f"NOTE: {REPO} has a newer revision ({latest}); using the pinned one ({REVISION}).")
+    revision = REVISION
     norm = WhisperTokenizer.from_pretrained("openai/whisper-small").normalize
     rows = build_rows(load_dataset(REPO, revision=revision), norm)
     group, small, l1_eng = assign_groups(rows, cfg)

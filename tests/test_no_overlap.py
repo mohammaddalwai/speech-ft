@@ -55,6 +55,21 @@ def test_every_split_is_nonempty_and_clips_fit_whisper():
         assert max(float(r["duration"]) for r in rows) <= 30.0, f"{s} has a clip longer than 30 s"
 
 
+def test_every_group_has_two_real_test_speakers():
+    """R6: each accent group needs >= 2 speakers with >= 2 minutes in test, or its test WER means nothing."""
+    data = load_splits()
+    secs = {}
+    for r in data["test"]:
+        key = (r["group"], r["speaker"])
+        secs[key] = secs.get(key, 0.0) + float(r["duration"])
+    counted = {}
+    for (g, _), t in secs.items():
+        counted[g] = counted.get(g, 0) + (t >= 120)
+    groups = {r["group"] for r in data["train"]}
+    thin = {g: counted.get(g, 0) for g in groups if counted.get(g, 0) < 2}
+    assert not thin, f"groups with fewer than 2 real test speakers: {thin}"
+
+
 def test_gate1_sample_comes_from_val():
     data = load_splits()
     sample = (SPLITS_DIR / "gate1_val_sample.txt").read_text().split()

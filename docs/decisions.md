@@ -46,7 +46,7 @@ Cut: E4, E5, E6, Common Voice.
 - R3: drop segments that are empty after Whisper's English normalizer (tags only).
 - R4: keep short clips; report WER by clip length in the error analysis.
 - R5: training text is lowercased with all <...> tags removed; nothing else changes.
-- R6: split by conversation, 70/10/20 (train/val/test) by usable hours; best of 20,000 random candidates (seed 0): val and test within 15% of target hours, then most group coverage.
+- R6: split by conversation, 70/10/20 (train/val/test) by usable hours; best of 20,000 random candidates (seed 0): val and test within 15% of target hours, then up to 2 speakers per group in test, then every group in train, then in val, then closest hours. A speaker counts toward a group only with at least 2 minutes of usable audio in that split.
 - R7: accent groups by first language (configs/accent_groups.yaml); groups with fewer than 4 speakers merge into "other" (by speaker count only). Headline group comparison: English as first language vs not.
 - The split files are created once by scripts/make_splits.py and never regenerated after any WER is seen.
 
@@ -66,3 +66,4 @@ Known costs of these rules (report in README and model card):
 ## Log
 - 2026-10-24: Phase 0 done. Mac and Colab L4 environments pass. CTranslate2 export path works with transformers 5.20.2. int8 output differed between Mac (ARM) and Colab (x86) CPUs on one clip, so Phase 4 accuracy and speed checks run on the deployment CPU only.
 - 2026-10-24: EdAcc inspected and census run. Data rules R1-R7 fixed. C39-A moved to east_southeast_asian (l1 "English", accent "Indonesian English"); middle_eastern (3 speakers) merged into "other".
+- 2026-10-24: First split (commit dbe087e) rejected before any WER was computed. Its scoring counted a group as covered with any utterance at all, so north_american had 12 seconds of test audio (1 speaker) and african had 1 test speaker. R6 scoring changed to require 2 speakers with at least 2 minutes per group in test; dataset revision pinned in the script. Splits regenerated once with the new rule.
