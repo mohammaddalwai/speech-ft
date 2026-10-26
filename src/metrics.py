@@ -5,7 +5,11 @@ import jiwer
 
 
 def utterance_errors(ref_norm: str, hyp_norm: str) -> dict:
+    """Error counts for one utterance. A reference that is empty after normalization has nothing to score:
+    it gets n_ref 0 and must be left out of WER by the caller (see evaluate.py)."""
     n = len(ref_norm.split())
+    if n == 0:
+        return {"n_ref": 0, "sub": 0, "del": 0, "ins": 0}
     if not hyp_norm.strip():
         return {"n_ref": n, "sub": 0, "del": n, "ins": 0}
     o = jiwer.process_words(ref_norm, hyp_norm)

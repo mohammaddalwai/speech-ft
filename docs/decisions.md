@@ -34,9 +34,11 @@ Cut: E4, E5, E6, Common Voice.
 
 ## Evaluation settings (fixed 2026-10-24, before any WER was computed)
 - Decoding (configs/decode.yaml): English, transcribe, greedy (1 beam), at most 224 new tokens, float16 on the L4. The same for every model and split; serving also uses greedy decoding.
-- WER is pooled over words: (S + D + I) / reference words, after Whisper's English normalizer on both sides.
+- WER is pooled over words: (S + D + I) / reference words, after the same normalizer on both sides.
+- Normalizer v2 (src/text.py), fixed 2026-10-25 after the Gate 1 review (val only) and before any baseline was reported: Whisper's English normalizer, then (a) more filler spellings removed: hm, hmmm, mmmm..., uhh, umm, uhm, er, erm, ah; (b) spelling conventions unified: alright -> all right, ok -> okay, cannot -> can not, kinda -> kind of, sorta -> sort of, dunno -> do not know, lemme -> let me, gimme -> give me, cause/cuz/coz/cos -> because. Same for every system. Its effect is measured by scripts/normalization_effect.py.
+- Utterances whose reference is empty after normalization (only fillers or tags) are not scored; they are counted, and so are model outputs on them.
 - Per-group WER uses the same pooling inside each group; the macro average is the plain mean of group WERs.
-- "Likely hallucination": output longer than 2x the reference plus 4 words. Counted, not removed.
+- Hallucination counts (counted, never removed): "capped" = output reached the 224-token limit without ending; "long" = output longer than 2x the reference plus 4 words.
 - A run name is never reused; results/results.csv only gets new rows.
 
 ## EdAcc facts (census, 2026-10-24)
@@ -74,3 +76,4 @@ Known costs of these rules (report in README and model card):
 - 2026-10-24: Phase 0 done. Mac and Colab L4 environments pass. CTranslate2 export path works with transformers 5.20.2. int8 output differed between Mac (ARM) and Colab (x86) CPUs on one clip, so Phase 4 accuracy and speed checks run on the deployment CPU only.
 - 2026-10-24: EdAcc inspected and census run. Data rules R1-R7 fixed. C39-A moved to east_southeast_asian (l1 "English", accent "Indonesian English"); middle_eastern (3 speakers) merged into "other".
 - 2026-10-24: First split (commit dbe087e) rejected before any WER was computed. Its scoring counted a group as covered with any utterance at all, so north_american had 12 seconds of test audio (1 speaker) and african had 1 test speaker. R6 scoring changed to require 2 speakers with at least 2 minutes per group in test; dataset revision pinned in the script. Splits regenerated once with the new rule.
+- 2026-10-25: Gate 1: zero-shot whisper-small on the 1,000-utterance val sample, pooled WER 30.24% (normalizer v1, commit ae5a5c5). Rule says >= 10%, so EdAcc is the dataset; L2-ARCTIC not measured. Error review of that run: two looping outputs ("blah" x192, "mmmm...") add about 1.5 points; filler spellings and spelling conventions led to normalizer v2. The word-count hallucination check missed the "mmmm..." loop, so outputs that hit the token cap are now counted too. The Gate 1 row in results.csv stays as a decision record (normalizer v1).

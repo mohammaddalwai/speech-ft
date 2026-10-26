@@ -1,4 +1,4 @@
-"""Normalizer and WER checks. The normalizer test downloads Whisper's tokenizer files once (needs internet)."""
+"""Normalizer and WER checks. The normalizer tests download Whisper's tokenizer files once (needs internet)."""
 import pathlib
 import sys
 
@@ -14,11 +14,23 @@ def test_normalizer_makes_edacc_and_whisper_styles_equal():
     pairs = [
         ("MISTER QUILTER IS THE APOSTLE", "Mr. Quilter is the apostle."),   # case, punctuation, titles
         ("<LAUGH> I DON'T THINK SO", "I don't think so."),                   # tags, contractions
-        ("UH SO MM HMM WE WENT", "So we went."),                             # fillers
+        ("UH SO MM HMM WE WENT", "So we went."),                             # fillers (Whisper's list)
         ("I HAVE TWENTY FIVE EUROS", "I have 25 euros."),                    # numbers
+        ("HMMM UHH I MEAN AH YES", "I mean, yes."),                          # v2: more filler spellings
+        ("ALRIGHT OKAY I CAN'T", "All right, OK, I cannot."),               # v2: spelling conventions
+        ("IT'S KINDA FUNNY CAUSE I DUNNO", "It's kind of funny because I do not know."),
     ]
     for edacc, whisper in pairs:
         assert text.normalize(edacc) == text.normalize(whisper), (edacc, whisper)
+
+
+def test_normalizer_keeps_real_words():
+    assert text.normalize("Huh? Oh, I am here.") == "huh 0 i am here"  # Whisper's normalizer writes "oh" as 0
+    assert text.normalize("A hum and a hymn") == "a hum and a hymn"
+
+
+def test_filler_loop_normalizes_to_nothing():
+    assert text.normalize("m" * 300) == ""
 
 
 def test_utterance_errors_and_pooling():
