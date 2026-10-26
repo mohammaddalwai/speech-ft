@@ -112,5 +112,7 @@
         "ins_rate": 0.06186918337921091
       }
     }
-  }
+  },
+  "capped_outputs": 2,
+  "capped_outputs_note": "heuristic recount by scripts/fix_capped.py (see its docstring)"
 }

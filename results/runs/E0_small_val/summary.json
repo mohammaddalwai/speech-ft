@@ -14,7 +14,7 @@
   "commit": "1074842",
   "gpu": "NVIDIA L4",
   "eval_minutes": 1.88,
-  "capped_outputs": 62,
+  "capped_outputs": 3,
   "long_outputs": 2,
   "normalizer": "v2",
   "unscored_empty_refs": 19,
@@ -116,5 +116,6 @@
         "ins_rate": 0.06031840944764183
       }
     }
-  }
+  },
+  "capped_outputs_note": "heuristic recount by scripts/fix_capped.py (see its docstring)"
 }

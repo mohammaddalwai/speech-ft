@@ -14,7 +14,7 @@
   "commit": "1074842-dirty",
   "gpu": "NVIDIA L4",
   "eval_minutes": 4.3,
-  "capped_outputs": 121,
+  "capped_outputs": 2,
   "long_outputs": 2,
   "normalizer": "v2",
   "unscored_empty_refs": 19,
@@ -116,5 +116,6 @@
         "ins_rate": 0.030944016742656403
       }
     }
-  }
+  },
+  "capped_outputs_note": "heuristic recount by scripts/fix_capped.py (see its docstring)"
 }

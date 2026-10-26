@@ -30,8 +30,9 @@ RESULT_COLS = ["date", "run", "model", "split", "subset", "utterances", "hours",
 def git_commit():
     try:
         sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout
-        dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT,
-                               capture_output=True, text=True).stdout
+        # results/ changes after every run, so it does not count as "dirty" code
+        dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no", "--", ".", ":(exclude)results"],
+                               cwd=ROOT, capture_output=True, text=True).stdout
         return (sha.strip() + ("-dirty" if dirty.strip() else "")) if sha.strip() else "unknown"
     except OSError:
         return "unknown"
@@ -45,8 +46,8 @@ def transcribe(model_name, audios, cfg, batch_size):
     dtype = getattr(torch, cfg["dtype"]) if device == "cuda" else torch.float32
     proc = WhisperProcessor.from_pretrained(model_name)
     model = WhisperForConditionalGeneration.from_pretrained(model_name, dtype=dtype).to(device).eval()
-    eos = model.generation_config.eos_token_id
-    eos = torch.tensor(eos if isinstance(eos, list) else [eos], device=device)
+    special = torch.tensor(sorted(proc.tokenizer.all_special_ids), device=device)
+    cap_at = cfg["max_new_tokens"] - 2
     hyps, capped = [], []
     for start in range(0, len(audios), batch_size):
         batch = audios[start:start + batch_size]
@@ -55,7 +56,9 @@ def transcribe(model_name, audios, cfg, batch_size):
             ids = model.generate(feats.to(device, dtype), language=cfg["language"], task=cfg["task"],
                                  num_beams=cfg["num_beams"], max_new_tokens=cfg["max_new_tokens"])
         hyps += [h.strip() for h in proc.batch_decode(ids, skip_special_tokens=True)]
-        capped += [not bool(torch.isin(row, eos).any()) for row in ids]  # hit the token cap without ending
+        # Capped = the output used (almost) all allowed tokens. Counting text tokens is reliable; looking for the
+        # end token is not, because generate() leaves it off the longest output in each batch.
+        capped += [int((~torch.isin(row, special)).sum()) >= cap_at for row in ids]
         print(f"  {min(start + batch_size, len(audios))}/{len(audios)} utterances", flush=True)
     gpu = torch.cuda.get_device_name(0) if device == "cuda" else "cpu"
     return hyps, capped, gpu
