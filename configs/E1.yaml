@@ -1,0 +1,18 @@
+# E1: full fine-tune of whisper-small on the frozen EdAcc train split (11,771 utterances, 15.9 h).
+# Later experiments copy this file and change ONE thing.
+base_model: openai/whisper-small
+seed: 42
+
+learning_rate: 1.0e-5
+lr_scheduler_type: linear
+warmup_steps: 200
+weight_decay: 0.0
+max_steps: 2000                  # about 5.4 epochs at an effective batch of 32
+per_device_train_batch_size: 16
+gradient_accumulation_steps: 2   # effective batch 32
+gradient_checkpointing: true     # saves GPU memory, costs some speed
+
+eval_steps: 250                  # val WER and a checkpoint every 250 steps
+per_device_eval_batch_size: 32
+early_stopping_patience: 3       # stop after 3 evaluations in a row without a better val WER
+dataloader_num_workers: 4

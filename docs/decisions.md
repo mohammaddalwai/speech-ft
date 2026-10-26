@@ -41,6 +41,16 @@ Cut: E4, E5, E6, Common Voice.
 - Hallucination counts (counted, never removed): "capped" = output reached the 224-token limit without ending; "long" = output longer than 2x the reference plus 4 words.
 - A run name is never reused; results/results.csv only gets new rows.
 
+## Training setup for E1 (fixed 2026-10-25, before any training run)
+- configs/E1.yaml: whisper-small, all weights trained, learning rate 1e-5 (linear decay, 200 warmup steps), effective batch 32 (16 x 2 accumulation), at most 2,000 steps (about 5.4 epochs), bf16, gradient checkpointing, seed 42.
+- Training text: R5 (lowercase, tags removed). Training data: the train split only.
+- Checkpoint selection: val WER (full val split, greedy, normalizer v2) every 250 steps; the best checkpoint is kept; training stops early after 3 evaluations in a row without improvement.
+- Because val picks the checkpoint, E1's val WER is slightly optimistic compared with the zero-shot baselines, which were not selected on val. The test set gives the unbiased comparison.
+- The official E1 val number comes from scripts/evaluate.py on the selected checkpoint, with exactly the baseline settings.
+- Gate 2: E1's official val WER must be below E0 whisper-small (29.42%). If not, check in this order: normalizer, label tokens, learning rate, data alignment, leakage.
+- Before E1: (a) debug run, 200 steps on 1,600 train / 200 val utterances: training loss must fall; (b) overfit test on 32 train clips at learning rate 1e-4: WER on those same clips must approach 0.
+- Checkpoints of full runs go to a private Hugging Face repo (<user>/speech-ft-<run>), latest checkpoint kept for resuming; history is squashed at the end to save storage.
+
 ## EdAcc facts (census, 2026-10-24)
 - 61 conversations with 2 speakers each (122 speakers), 19,137 segments, 32.74 h. Audio is 32 kHz.
 - Official validation and test splits share no conversation.
