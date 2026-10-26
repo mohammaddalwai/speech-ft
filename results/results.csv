@@ -3,3 +3,4 @@ date,run,model,split,subset,utterances,hours,wer,sub_rate,del_rate,ins_rate,macr
 2026-10-26,E0_small_val,openai/whisper-small,val,,1785,2.38,0.2942,0.1222,0.1248,0.0472,0.2786,3,2,v2,1074842,NVIDIA L4,1.88
 2026-10-26,E0b_medium_val,openai/whisper-medium,val,,1785,2.38,0.2566,0.0994,0.1252,0.032,0.2437,2,2,v2,1074842-dirty,NVIDIA L4,4.3
 2026-10-26,E0c_turbo_val,openai/whisper-large-v3-turbo,val,,1785,2.38,0.2383,0.0915,0.1135,0.0332,0.2291,1,0,v2,1074842-dirty,NVIDIA L4,3.51
+2026-10-26,E1_val,mddalwai/speech-ft-E1,val,,1785,2.38,0.2477,0.143,0.0475,0.0573,0.2342,0,0,v2,632a38e,NVIDIA L4,1.7
