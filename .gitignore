@@ -8,3 +8,4 @@ ct2-*/
 .venv/
 __pycache__/
 .DS_Store
+results/runs/smoke/

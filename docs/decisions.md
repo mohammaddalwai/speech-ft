@@ -32,6 +32,13 @@ Cut: E4, E5, E6, Common Voice.
 - All reported WER numbers use the same GPU type (L4) and precision. Speed numbers use the deployment CPU, after warm-up.
 - Tune on validation only. Run the test set once per final configuration.
 
+## Evaluation settings (fixed 2026-10-24, before any WER was computed)
+- Decoding (configs/decode.yaml): English, transcribe, greedy (1 beam), at most 224 new tokens, float16 on the L4. The same for every model and split; serving also uses greedy decoding.
+- WER is pooled over words: (S + D + I) / reference words, after Whisper's English normalizer on both sides.
+- Per-group WER uses the same pooling inside each group; the macro average is the plain mean of group WERs.
+- "Likely hallucination": output longer than 2x the reference plus 4 words. Counted, not removed.
+- A run name is never reused; results/results.csv only gets new rows.
+
 ## EdAcc facts (census, 2026-10-24)
 - 61 conversations with 2 speakers each (122 speakers), 19,137 segments, 32.74 h. Audio is 32 kHz.
 - Official validation and test splits share no conversation.

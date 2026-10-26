@@ -1,0 +1,7 @@
+# Decoding settings used for EVERY evaluation run: all models, all splits, LibriSpeech too.
+# Change only with a new entry in docs/decisions.md, and then rerun every number in the results table.
+language: en
+task: transcribe
+num_beams: 1          # greedy: deterministic, and the same setting is used when serving on CPU
+max_new_tokens: 224   # cap so a looping (hallucinating) output cannot run forever; counted as insertions
+dtype: float16        # inference precision on the L4
