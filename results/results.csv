@@ -1,0 +1,2 @@
+date,run,model,split,subset,utterances,hours,wer,sub_rate,del_rate,ins_rate,macro_group_wer,long_outputs,commit,gpu,eval_minutes
+2026-10-26,E0_small_gate1,openai/whisper-small,val,splits/gate1_val_sample.txt,1000,1.36,0.3024,0.1223,0.1307,0.0494,0.2888,1,ae5a5c5,NVIDIA L4,0.95
