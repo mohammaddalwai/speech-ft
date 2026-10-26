@@ -6,6 +6,7 @@ Run from the repo root on Colab:
   Overfit 32 clips:     python scripts/train.py --config configs/E1.yaml --run E1_overfit --overfit 32 \
                             --max-steps 120 --warmup-steps 10 --lr 1e-4 --eval-steps 40 --no-push
   Full run (A100):      python scripts/train.py --config configs/E1.yaml --run E1
+                        (best model: checkpoints/E1_best locally, and <user>/speech-ft-E1 on the Hub)
   Resume after a drop:  python scripts/train.py --config configs/E1.yaml --run E1 --resume
 
 The val WER printed during training is only for picking the checkpoint. The official val number comes from
@@ -135,14 +136,13 @@ def main():
     trainer.train(resume_from_checkpoint=resume)
     minutes = (time.time() - t0) / 60
 
-    best_dir = out_dir / "best"  # load_best_model_at_end: the trainer now holds the best checkpoint
+    # load_best_model_at_end: the trainer now holds the best checkpoint. Saved NEXT TO the output folder,
+    # so push_to_hub (which uploads the output folder) does not upload a second copy of it.
+    best_dir = ROOT / "checkpoints" / f"{args.run}_best"
     trainer.save_model(str(best_dir))
     processor.save_pretrained(str(best_dir))
-    if push:
-        trainer.push_to_hub(commit_message=f"{args.run}: best checkpoint by val WER")
-        HfApi().super_squash_history(repo_id=hub_id)  # drop old checkpoint versions to save Hub storage
 
-    st = trainer.state
+    st = trainer.state  # write the log BEFORE any network step, so a failed upload cannot lose it
     log = {"run": args.run, "config": cfg, "commit": git_commit(), "gpu": torch.cuda.get_device_name(0),
            "bf16": bf16, "train_utterances": len(train_rows), "eval_utterances": len(eval_rows),
            "overfit": args.overfit, "minutes": round(minutes, 1), "global_step": st.global_step,
@@ -162,8 +162,19 @@ def main():
     best = f"{st.best_metric:.2%}" if st.best_metric is not None else "n/a (no evaluation ran)"
     print(f"best eval WER {best} at {st.best_model_checkpoint} | {st.global_step} steps in "
           f"{minutes:.1f} min ({minutes * 60 / max(st.global_step, 1):.2f} s/step) | peak GPU {log['peak_gpu_gb']} GB")
-    print(f"best model saved to {best_dir}" + (f" and pushed to {hub_id} (private)" if push else ""))
+    print(f"best model saved to {best_dir}")
 
+    if push:
+        try:
+            trainer.push_to_hub(commit_message=f"{args.run}: best checkpoint by val WER")
+            print(f"best model pushed to {hub_id} (private)")
+        except Exception as e:  # the local copy and the log are already safe
+            print(f"WARNING: push to {hub_id} failed ({type(e).__name__}: {e}). Local copy: {best_dir}")
+            return
+        try:
+            HfApi().super_squash_history(repo_id=hub_id)  # drop old checkpoint versions to save Hub storage
+        except Exception as e:
+            print(f"WARNING: could not squash Hub history ({type(e).__name__}: {e}). Only costs storage.")
 
 if __name__ == "__main__":
     main()
