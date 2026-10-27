@@ -56,6 +56,11 @@ Cut: E4, E5, E6, Common Voice.
 - Rule L1: clips longer than 30 s are dropped (Whisper's input limit, as R2 for EdAcc); the number dropped is reported.
 - Compared: zero-shot whisper-small (E0) vs E1. E3 (replay) is triggered if E1's WER is more than 10% higher (relative) than E0's on either test set (scripts/forgetting_check.py).
 
+## E3 and the final-model choice (fixed 2026-10-26, before E3 runs)
+- E3 = configs/E1.yaml plus ONE change: replay. 15% of all training clips are LibriSpeech train-clean-100 (about 2,077 clips <= 30 s, random with seed 42, from the first 4 parquet shards), lowercased like R5. LibriSpeech train and test speakers do not overlap. Checkpoint chosen by EdAcc val WER, exactly as E1.
+- Final model = E3 if (a) its official val WER is at most 1.0 point worse than E1's (24.77%), and (b) its LibriSpeech WER is lower than E1's on both test-clean and test-other. Otherwise the final model is E1, and its forgetting is reported as a limitation.
+- E1 and E3 are both reported on test either way, with the forgetting-rule result for each.
+
 ## EdAcc facts (census, 2026-10-24)
 - 61 conversations with 2 speakers each (122 speakers), 19,137 segments, 32.74 h. Audio is 32 kHz.
 - Official validation and test splits share no conversation.
@@ -97,3 +102,4 @@ Known costs of these rules (report in README and model card):
 - 2026-10-25: E1 trained: 2,000 steps (no early stop), 38.9 min on an A100 80GB, peak 6.7 GB. Val WER during training was noisy (28.7, 31.6, 25.7, 25.4, 29.3, 26.0, 24.8, 25.3%) while val loss rose from the first check (0.61 -> 0.80): overfitting by loss. Best checkpoint: step 1750, pushed to mddalwai/speech-ft-E1 (private).
 - 2026-10-25: Official E1 val (L4): 24.77% WER (sub 14.3%, del 4.8%, ins 5.7%), 0 looping outputs. Gate 2 passed (bar 29.42%). Still about 1 point behind zero-shot turbo (23.83%). The match with step 1750's training-time WER (24.80%, vs 25.25% at step 2000) confirms the Hub copy is the best checkpoint.
 - 2026-10-25: Where E1's gain comes from (scripts/compare_runs.py, E0_small_val -> E1_val, % of reference words): deleted -> correct 6.1 pts, mostly short discourse words and repeats; substituted -> correct 3.5 pts; correct -> wrong 3.9 pts. On words the zero-shot model already attempted, recognition is roughly flat; the gain is mostly learning EdAcc's word-for-word transcription style. Claims about "better recognition of accented speech" are not supported by val.
+- 2026-10-26: Forgetting check (L4): zero-shot small 3.33% / 7.45% WER on LibriSpeech test-clean / test-other (9 and 7 clips over 30 s dropped); close to the Whisper paper's 3.4% / 7.6%, which also validates the pipeline. E1: 4.70% / 10.22%, i.e. +41% / +37% relative, so E3 is triggered. Looping outputs: E1 1 and 6, E0 none; without them E1 is still 4.67% / 10.07%, so the damage is broad, not just loops. E1 is worse than E0 on 971 of 2,932 test-other utterances and better on 303. Typical failures: stopping after a few words, a short conversational reply (e.g. "yeah sir") for a long read sentence, starting mid-sentence. This is consistent with E1 having learned EdAcc's short conversational segments.

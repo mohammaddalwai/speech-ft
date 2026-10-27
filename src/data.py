@@ -77,3 +77,32 @@ def librispeech_items(split, limit=None):
         audios.append(wav)
         refs.append(item["text"])
     return rows, audios, refs, dropped
+
+
+def librispeech_replay(n, seed, shards=4):
+    """E3 replay data: n random clips (<= 30 s) from LibriSpeech train-clean-100. LibriSpeech's train and test
+    speakers do not overlap, so this cannot leak into the forgetting check. Downloads only a few shards."""
+    import random
+
+    from datasets import Audio, load_dataset
+    from huggingface_hub import HfApi
+
+    files = sorted(f for f in HfApi().list_repo_files(LIBRI_REPO, repo_type="dataset")
+                   if f.startswith("clean/train.100/") and f.endswith(".parquet"))[:shards]
+    ds = load_dataset(LIBRI_REPO, data_files={"train": files}, split="train")
+    ds = ds.cast_column("audio", Audio(decode=False))
+    order = list(range(len(ds)))
+    random.Random(seed).shuffle(order)
+    picked, seconds = [], 0.0
+    for i in order:
+        a = ds[i]["audio"]
+        info = sf.info(io.BytesIO(a["bytes"]) if a.get("bytes") else a["path"])
+        dur = info.frames / info.samplerate
+        if dur <= MAX_SEC:
+            picked.append(i)
+            seconds += dur
+            if len(picked) == n:
+                break
+    if len(picked) < n:
+        raise ValueError(f"only {len(picked)} replay clips in {len(files)} shards; raise `shards`")
+    return ds, picked, files, round(seconds / 3600, 2)

@@ -25,6 +25,23 @@ class SplitDataset(torch.utils.data.Dataset):
         return {"input_features": feats, "labels": labels}
 
 
+class ReplayDataset(torch.utils.data.Dataset):
+    """E3: LibriSpeech clips mixed into training to reduce forgetting. Same item format as SplitDataset."""
+
+    def __init__(self, ds, indices, processor):
+        self.ds, self.idx = ds, indices
+        self.fe, self.tok = processor.feature_extractor, processor.tokenizer
+
+    def __len__(self):
+        return len(self.idx)
+
+    def __getitem__(self, i):
+        item = self.ds[self.idx[i]]
+        audio = data.decode_audio(item["audio"])
+        feats = self.fe(audio, sampling_rate=data.SR, return_tensors="np").input_features[0]
+        return {"input_features": feats, "labels": self.tok(text.training_text(item["text"])).input_ids}
+
+
 class Collator:
     """Pads features and labels. Padded label positions become -100 so the loss ignores them. The leading
     <|startoftranscript|> is dropped from labels because the model adds it itself when shifting labels right."""

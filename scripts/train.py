@@ -8,6 +8,7 @@ Run from the repo root on Colab:
   Full run (A100):      python scripts/train.py --config configs/E1.yaml --run E1
                         (best model: checkpoints/E1_best locally, and <user>/speech-ft-E1 on the Hub)
   Resume after a drop:  python scripts/train.py --config configs/E1.yaml --run E1 --resume
+  E3 (E1 + replay):     python scripts/train.py --config configs/E3.yaml --run E3
 
 The val WER printed during training is only for picking the checkpoint. The official val number comes from
 scripts/evaluate.py on the saved model, with exactly the same settings as the baselines.
@@ -92,6 +93,17 @@ def main():
     model.generation_config.max_new_tokens = dec["max_new_tokens"]
     model.config.use_cache = not cfg["gradient_checkpointing"]
 
+    train_set, replay_info = train_data.SplitDataset(train_rows, dsd, processor), None
+    if cfg.get("replay") and not args.overfit:
+        # share of replay clips among ALL training clips: n / (n + edacc) = fraction
+        frac = cfg["replay"]["fraction"]
+        n = round(frac / (1 - frac) * len(train_rows))
+        ds_r, picked, files, hours = data.librispeech_replay(n, cfg["seed"], cfg["replay"]["shards"])
+        train_set = torch.utils.data.ConcatDataset([train_set, train_data.ReplayDataset(ds_r, picked, processor)])
+        replay_info = {"clips": len(picked), "fraction": frac, "files": files, "hours": hours}
+        print(f"replay: {len(picked)} LibriSpeech train-clean-100 clips ({replay_info['hours']} h) "
+              f"mixed with {len(train_rows)} EdAcc clips")
+
     out_dir = ROOT / "checkpoints" / args.run
     push = not args.no_push
     hub_id = f"{HfApi().whoami()['name']}/speech-ft-{args.run}" if push else None
@@ -118,7 +130,7 @@ def main():
     )
     trainer = Seq2SeqTrainer(
         model=model, args=targs,
-        train_dataset=train_data.SplitDataset(train_rows, dsd, processor),
+        train_dataset=train_set,
         eval_dataset=train_data.SplitDataset(eval_rows, dsd, processor),
         data_collator=train_data.Collator(processor, model.config.decoder_start_token_id),
         processing_class=processor, compute_metrics=compute_metrics,
@@ -144,7 +156,7 @@ def main():
 
     st = trainer.state  # write the log BEFORE any network step, so a failed upload cannot lose it
     log = {"run": args.run, "config": cfg, "commit": git_commit(), "gpu": torch.cuda.get_device_name(0),
-           "bf16": bf16, "train_utterances": len(train_rows), "eval_utterances": len(eval_rows),
+           "bf16": bf16, "train_utterances": len(train_rows), "replay": replay_info, "eval_utterances": len(eval_rows),
            "overfit": args.overfit, "minutes": round(minutes, 1), "global_step": st.global_step,
            "best_val_wer_during_training": st.best_metric, "best_checkpoint": st.best_model_checkpoint,
            "peak_gpu_gb": round(torch.cuda.max_memory_allocated() / 1e9, 1), "hub_repo": hub_id,

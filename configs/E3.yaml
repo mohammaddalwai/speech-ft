@@ -1,0 +1,22 @@
+# E3: E1 + replay. ONE change vs configs/E1.yaml: 15% of training clips are LibriSpeech train-clean-100
+# (read speech), to reduce forgetting. Triggered by the pre-set rule: E1 was 41% / 37% worse on LibriSpeech.
+base_model: openai/whisper-small
+seed: 42
+
+learning_rate: 1.0e-5
+lr_scheduler_type: linear
+warmup_steps: 200
+weight_decay: 0.0
+max_steps: 2000
+per_device_train_batch_size: 16
+gradient_accumulation_steps: 2
+gradient_checkpointing: true
+
+eval_steps: 250
+per_device_eval_batch_size: 32
+early_stopping_patience: 3
+dataloader_num_workers: 4
+
+replay:
+  fraction: 0.15   # share of ALL training clips that come from LibriSpeech (about 2,077 clips)
+  shards: 4        # parquet files of clean/train.100 to sample from
