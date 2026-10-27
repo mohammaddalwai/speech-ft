@@ -26,7 +26,10 @@ def main():
         rel = (n - b) / b
         triggered |= rel > THRESHOLD
         print(f"test-{part:5}: {args.base} {b:.2%} -> {args.new} {n:.2%} | {n - b:+.2%} absolute, {rel:+.1%} relative")
-    print(f"\nE3 (replay) {'TRIGGERED' if triggered else 'not triggered'}: rule is > {THRESHOLD:.0%} relative on either set")
+    verdict = "FAILED" if triggered else "passed"
+    print(f"\nforgetting rule {verdict} (fails if > {THRESHOLD:.0%} relative worse on either set)")
+    if args.new == "E1":
+        print(f"E3 (replay) {'TRIGGERED' if triggered else 'not triggered'}")
 
 
 if __name__ == "__main__":

@@ -61,6 +61,13 @@ Cut: E4, E5, E6, Common Voice.
 - Final model = E3 if (a) its official val WER is at most 1.0 point worse than E1's (24.77%), and (b) its LibriSpeech WER is lower than E1's on both test-clean and test-other. Otherwise the final model is E1, and its forgetting is reported as a limitation.
 - E1 and E3 are both reported on test either way, with the forgetting-rule result for each.
 
+## Test session (fixed 2026-10-26, before any test-set number exists)
+- Final model: E3 (decided by the rule above; see log). Extra training seeds 43 and 44 of E3 are run first, because the project is ahead of schedule (scope rule). The replay clips stay the same across seeds.
+- Every system is evaluated on the test split ONCE, in one L4 session: E0 small, E0b medium, E0c turbo, E1, E3 (seeds 42, 43, 44).
+- Headline: E3 test WER as mean +/- standard deviation over the 3 seeds (training randomness), plus the paired speaker bootstrap 95% interval (2,000 resamples) for E3 seed 42 vs E0 small, vs E0c turbo and vs E1 (test-set sampling). "Significant" only if the interval excludes 0.
+- Per-group results: point WER for every group; bootstrap intervals only for groups with at least 5 test speakers (fewer gives falsely narrow intervals).
+- The served model is E3 seed 42 (chosen now, not by test results).
+
 ## EdAcc facts (census, 2026-10-24)
 - 61 conversations with 2 speakers each (122 speakers), 19,137 segments, 32.74 h. Audio is 32 kHz.
 - Official validation and test splits share no conversation.
@@ -103,3 +110,7 @@ Known costs of these rules (report in README and model card):
 - 2026-10-25: Official E1 val (L4): 24.77% WER (sub 14.3%, del 4.8%, ins 5.7%), 0 looping outputs. Gate 2 passed (bar 29.42%). Still about 1 point behind zero-shot turbo (23.83%). The match with step 1750's training-time WER (24.80%, vs 25.25% at step 2000) confirms the Hub copy is the best checkpoint.
 - 2026-10-25: Where E1's gain comes from (scripts/compare_runs.py, E0_small_val -> E1_val, % of reference words): deleted -> correct 6.1 pts, mostly short discourse words and repeats; substituted -> correct 3.5 pts; correct -> wrong 3.9 pts. On words the zero-shot model already attempted, recognition is roughly flat; the gain is mostly learning EdAcc's word-for-word transcription style. Claims about "better recognition of accented speech" are not supported by val.
 - 2026-10-26: Forgetting check (L4): zero-shot small 3.33% / 7.45% WER on LibriSpeech test-clean / test-other (9 and 7 clips over 30 s dropped); close to the Whisper paper's 3.4% / 7.6%, which also validates the pipeline. E1: 4.70% / 10.22%, i.e. +41% / +37% relative, so E3 is triggered. Looping outputs: E1 1 and 6, E0 none; without them E1 is still 4.67% / 10.07%, so the damage is broad, not just loops. E1 is worse than E0 on 971 of 2,932 test-other utterances and better on 303. Typical failures: stopping after a few words, a short conversational reply (e.g. "yeah sir") for a long read sentence, starting mid-sentence. This is consistent with E1 having learned EdAcc's short conversational segments.
+- 2026-10-26: E3 trained: 2,000 steps, 40.5 min on an A100, best checkpoint step 1750 (24.09% val WER during training). Replay: 2,077 LibriSpeech clips = 15% of clips but 7.4 h, i.e. about 32% of training audio (LibriSpeech clips are longer than EdAcc's).
+- 2026-10-26: Official E3 (L4): val 23.93% WER (E1 24.77%, turbo 23.83%); LibriSpeech 3.85% / 8.62% (E0 small 3.33% / 7.45%, E1 4.70% / 10.22%). Forgetting rule still FAILED (+15.6% / +15.7% relative), but less than half of E1's damage. Final-model rule: E3 val is not worse than E1's and its LibriSpeech WER is lower on both sets, so E3 is the final model; its remaining forgetting is a reported limitation. No looping outputs on val or LibriSpeech.
+- 2026-10-26: Where E3's val gain comes from (compare_runs, E0 small -> E3): deleted -> correct 6.1 pts, substituted -> correct 3.6, correct -> wrong 3.5. Same picture as E1: the gain is mostly transcription style; recognition of already-attempted words is about flat.
+- 2026-10-26: E2 (LoRA) stays cut: E3 already addresses forgetting, and the remaining time goes to the test session, error analysis and Phase 4. Bootstrap on val (for checking the code only; val picked the checkpoints, so these are optimistic): E3 vs E0 small -5.5 points [-7.3, -3.7]; E3 vs turbo +0.1 [-1.0, +1.3].

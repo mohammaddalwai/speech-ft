@@ -9,6 +9,7 @@ Run from the repo root on Colab:
                         (best model: checkpoints/E1_best locally, and <user>/speech-ft-E1 on the Hub)
   Resume after a drop:  python scripts/train.py --config configs/E1.yaml --run E1 --resume
   E3 (E1 + replay):     python scripts/train.py --config configs/E3.yaml --run E3
+  Extra training seed:  python scripts/train.py --config configs/E3.yaml --run E3_seed43 --seed 43
 
 The val WER printed during training is only for picking the checkpoint. The official val number comes from
 scripts/evaluate.py on the saved model, with exactly the same settings as the baselines.
@@ -54,6 +55,7 @@ def main():
     ap.add_argument("--warmup-steps", type=int)
     ap.add_argument("--eval-steps", type=int)
     ap.add_argument("--lr", type=float)
+    ap.add_argument("--seed", type=int, help="training seed (init order, shuffling); the replay sample stays fixed")
     ap.add_argument("--train-limit", type=int, help="random subset of train utterances (debug)")
     ap.add_argument("--eval-limit", type=int, help="random subset of val utterances (debug)")
     ap.add_argument("--overfit", type=int, help="train AND evaluate on this many train clips")
@@ -71,7 +73,7 @@ def main():
     with open(ROOT / "configs" / "decode.yaml") as f:
         dec = yaml.safe_load(f)
     for key, val in (("max_steps", args.max_steps), ("warmup_steps", args.warmup_steps),
-                     ("eval_steps", args.eval_steps), ("learning_rate", args.lr)):
+                     ("eval_steps", args.eval_steps), ("learning_rate", args.lr), ("seed", args.seed)):
         if val is not None:
             cfg[key] = val
     set_seed(cfg["seed"])
@@ -98,7 +100,8 @@ def main():
         # share of replay clips among ALL training clips: n / (n + edacc) = fraction
         frac = cfg["replay"]["fraction"]
         n = round(frac / (1 - frac) * len(train_rows))
-        ds_r, picked, files, hours = data.librispeech_replay(n, cfg["seed"], cfg["replay"]["shards"])
+        replay_seed = cfg["replay"].get("seed", 42)  # fixed, so extra training seeds see the same replay clips
+        ds_r, picked, files, hours = data.librispeech_replay(n, replay_seed, cfg["replay"]["shards"])
         train_set = torch.utils.data.ConcatDataset([train_set, train_data.ReplayDataset(ds_r, picked, processor)])
         replay_info = {"clips": len(picked), "fraction": frac, "files": files, "hours": hours}
         print(f"replay: {len(picked)} LibriSpeech train-clean-100 clips ({replay_info['hours']} h) "

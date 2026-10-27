@@ -20,3 +20,4 @@ dataloader_num_workers: 4
 replay:
   fraction: 0.15   # share of ALL training clips that come from LibriSpeech (about 2,077 clips)
   shards: 4        # parquet files of clean/train.100 to sample from
+  seed: 42         # which replay clips are picked; fixed across training seeds
