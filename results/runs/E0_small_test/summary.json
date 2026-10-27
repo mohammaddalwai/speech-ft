@@ -1,0 +1,138 @@
+{
+  "run": "E0_small_test",
+  "model": "openai/whisper-small",
+  "dataset": "edacc",
+  "split": "test",
+  "subset": null,
+  "dropped_over_30s": 0,
+  "limit": null,
+  "decode": {
+    "language": "en",
+    "task": "transcribe",
+    "num_beams": 1,
+    "max_new_tokens": 224,
+    "dtype": "float16"
+  },
+  "commit": "9e4482d",
+  "gpu": "NVIDIA L4",
+  "eval_minutes": 3.08,
+  "capped_outputs": 6,
+  "long_outputs": 8,
+  "normalizer": "v2",
+  "unscored_empty_refs": 10,
+  "outputs_on_unscored": 5,
+  "by_group": {
+    "pooled": {
+      "utterances": 3341,
+      "ref_words": 46908,
+      "wer": 0.2253346977061482,
+      "sub_rate": 0.0780037520252409,
+      "del_rate": 0.11085529120832267,
+      "ins_rate": 0.036475654472584634
+    },
+    "macro_over_groups": 0.20680247045758898,
+    "by_group": {
+      "african": {
+        "utterances": 982,
+        "ref_words": 13373,
+        "wer": 0.2957451581544904,
+        "sub_rate": 0.10132356240185449,
+        "del_rate": 0.14177820982576833,
+        "ins_rate": 0.05264338592686757
+      },
+      "british_irish": {
+        "utterances": 517,
+        "ref_words": 7423,
+        "wer": 0.15263370604876733,
+        "sub_rate": 0.06452916610534824,
+        "del_rate": 0.06776236023171224,
+        "ins_rate": 0.02034217971170686
+      },
+      "caribbean": {
+        "utterances": 68,
+        "ref_words": 1642,
+        "wer": 0.1961023142509135,
+        "sub_rate": 0.08891595615103533,
+        "del_rate": 0.07734470158343483,
+        "ins_rate": 0.02984165651644336
+      },
+      "east_southeast_asian": {
+        "utterances": 461,
+        "ref_words": 6964,
+        "wer": 0.2795807007466973,
+        "sub_rate": 0.07854681217690983,
+        "del_rate": 0.15221137277426766,
+        "ins_rate": 0.048822515795519814
+      },
+      "european_other": {
+        "utterances": 429,
+        "ref_words": 4107,
+        "wer": 0.21645970294618944,
+        "sub_rate": 0.08083759435110786,
+        "del_rate": 0.1139517896274653,
+        "ins_rate": 0.021670318967616266
+      },
+      "european_romance": {
+        "utterances": 158,
+        "ref_words": 2740,
+        "wer": 0.1635036496350365,
+        "sub_rate": 0.06642335766423357,
+        "del_rate": 0.07664233576642336,
+        "ins_rate": 0.020437956204379562
+      },
+      "north_american": {
+        "utterances": 221,
+        "ref_words": 2568,
+        "wer": 0.17562305295950156,
+        "sub_rate": 0.07165109034267912,
+        "del_rate": 0.0778816199376947,
+        "ins_rate": 0.026090342679127725
+      },
+      "other": {
+        "utterances": 415,
+        "ref_words": 6909,
+        "wer": 0.17006802721088435,
+        "sub_rate": 0.04617166015342307,
+        "del_rate": 0.09031697785497178,
+        "ins_rate": 0.033579389202489505
+      },
+      "south_asian": {
+        "utterances": 90,
+        "ref_words": 1182,
+        "wer": 0.21150592216582065,
+        "sub_rate": 0.09729272419627749,
+        "del_rate": 0.09475465313028765,
+        "ins_rate": 0.0194585448392555
+      }
+    }
+  },
+  "by_l1_english": {
+    "pooled": {
+      "utterances": 3341,
+      "ref_words": 46908,
+      "wer": 0.2253346977061482,
+      "sub_rate": 0.0780037520252409,
+      "del_rate": 0.11085529120832267,
+      "ins_rate": 0.036475654472584634
+    },
+    "macro_over_groups": 0.2246677906836817,
+    "by_l1_english": {
+      "False": {
+        "utterances": 1548,
+        "ref_words": 21772,
+        "wer": 0.21536836303509094,
+        "sub_rate": 0.06839059342274481,
+        "del_rate": 0.11308102149549881,
+        "ins_rate": 0.03389674811684733
+      },
+      "True": {
+        "utterances": 1793,
+        "ref_words": 25136,
+        "wer": 0.23396721833227244,
+        "sub_rate": 0.08633036282622533,
+        "del_rate": 0.10892743475493316,
+        "ins_rate": 0.03870942075111394
+      }
+    }
+  }
+}
