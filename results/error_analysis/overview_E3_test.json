@@ -1,0 +1,116 @@
+{
+  "run": "E3_test",
+  "base": "E0_small_test",
+  "worst_n": 50,
+  "worst_share_of_errors": 0.09605331939362258,
+  "wer_by_clip_length": {
+    "0-1s": {
+      "utterances": 998,
+      "E0_small_test": 0.8008948545861297,
+      "E0c_turbo_test": 0.5917225950782998,
+      "E3_test": 0.5055928411633109
+    },
+    "1-3s": {
+      "utterances": 796,
+      "E0_small_test": 0.46758678377248014,
+      "E0c_turbo_test": 0.3370974487662066,
+      "E3_test": 0.32726892513592637
+    },
+    "3-10s": {
+      "utterances": 970,
+      "E0_small_test": 0.21006265897388177,
+      "E0c_turbo_test": 0.1678143805446988,
+      "E3_test": 0.1562752031763757
+    },
+    "10-30.01s": {
+      "utterances": 577,
+      "E0_small_test": 0.14517527561005822,
+      "E0c_turbo_test": 0.13113671084685577,
+      "E3_test": 0.10999628390932739
+    }
+  },
+  "tags": {
+    "<DTMF>": {
+      "utterances": 73,
+      "wer": 0.28681710213776723,
+      "share_of_errors": 0.06312075274438056
+    },
+    "<OVERLAP>": {
+      "utterances": 45,
+      "wer": 0.23577235772357724,
+      "share_of_errors": 0.01894929430214323
+    },
+    "<NO-SPEECH>": {
+      "utterances": 25,
+      "wer": 0.26422764227642276,
+      "share_of_errors": 0.016989022477783586
+    },
+    "<LAUGH>": {
+      "utterances": 339,
+      "wer": 0.17774667599720084,
+      "share_of_errors": 0.13277574490329325
+    }
+  },
+  "examples": [
+    {
+      "kind": "improved",
+      "utt_id": "validation-04181",
+      "group": "east_southeast_asian",
+      "ref": "i was",
+      "base": "ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha",
+      "new": "i know",
+      "errors": [
+        224,
+        1
+      ]
+    },
+    {
+      "kind": "improved",
+      "utt_id": "test-03967",
+      "group": "african",
+      "ref": "okay",
+      "base": "i hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear you hear",
+      "new": "i hear it",
+      "errors": [
+        224,
+        3
+      ]
+    },
+    {
+      "kind": "improved",
+      "utt_id": "validation-06776",
+      "group": "other",
+      "ref": "i will definitely do unless",
+      "base": "i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do i would definitely do",
+      "new": "i would definitely do unless",
+      "errors": [
+        177,
+        1
+      ]
+    },
+    {
+      "kind": "got worse",
+      "utt_id": "test-03950",
+      "group": "african",
+      "ref": "it does not sound as bad as if a person dies but then i realized veterinary or medicine is not something i am interested in",
+      "base": "it does not sound as bad as if a person dies but then i realized that there are many things in something i am interested in but it is still lying",
+      "new": "it does not sound as bad as if i pass on dies but then i realize if i do not have any medicines and something i am interested in i am going to make sure i get one in my life",
+      "errors": [
+        11,
+        24
+      ]
+    },
+    {
+      "kind": "got worse",
+      "utt_id": "validation-07169",
+      "group": "european_other",
+      "ref": "but also spain is good yes",
+      "base": "but also spain is good yes",
+      "new": "but also things good yes and so until we also try",
+      "errors": [
+        0,
+        8
+      ]
+    }
+  ]
+}

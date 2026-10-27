@@ -12,3 +12,6 @@ pyyaml==6.0.3
 pytest==9.1.1
 ctranslate2==4.8.3
 faster-whisper==1.2.1
+
+# Analysis charts (scripts/plot_groups.py)
+matplotlib==3.11.2
