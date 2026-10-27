@@ -1,6 +1,7 @@
 """Evaluate a Whisper model on a frozen EdAcc split. Used for Gate 1, every baseline and every fine-tuned model.
 
 Examples (run from the repo root on the L4):
+    python scripts/evaluate.py --model openai/whisper-small --dataset librispeech --split test-clean --run E0_small_libri_clean
     python scripts/evaluate.py --model openai/whisper-small --split val --limit 64 --run smoke
     python scripts/evaluate.py --model openai/whisper-small --split val \
         --subset splits/gate1_val_sample.txt --run E0_small_gate1
@@ -67,7 +68,9 @@ def transcribe(model_name, audios, cfg, batch_size):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True, help="HF model id or local checkpoint folder")
-    ap.add_argument("--split", choices=["train", "val", "test"], required=True)
+    ap.add_argument("--dataset", choices=["edacc", "librispeech"], default="edacc")
+    ap.add_argument("--split", choices=["train", "val", "test", "test-clean", "test-other"], required=True,
+                    help="EdAcc: train/val/test. LibriSpeech: test-clean/test-other")
     ap.add_argument("--subset", help="file with utterance ids, e.g. splits/gate1_val_sample.txt")
     ap.add_argument("--limit", type=int, help="only the first N utterances (smoke tests)")
     ap.add_argument("--run", required=True, help="run name, e.g. E0_small_gate1")
@@ -85,10 +88,17 @@ def main():
     with open(ROOT / "configs" / "decode.yaml") as f:
         cfg = yaml.safe_load(f)
 
-    rows = data.split_rows(args.split, args.subset, args.limit)
-    print(f"{args.run}: {args.model} on {args.split} ({len(rows)} utterances), decode={cfg}")
-    dsd = data.load_edacc()
-    audios, refs = zip(*(data.fetch(dsd, r) for r in rows))
+    if (args.dataset == "librispeech") != args.split.startswith("test-"):
+        raise SystemExit("EdAcc uses --split train/val/test; LibriSpeech uses --split test-clean/test-other")
+    dropped_long = 0
+    if args.dataset == "edacc":
+        rows = data.split_rows(args.split, args.subset, args.limit)
+        dsd = data.load_edacc()
+        audios, refs = zip(*(data.fetch(dsd, r) for r in rows))
+    else:
+        rows, audios, refs, dropped_long = data.librispeech_items(args.split, args.limit)
+        print(f"LibriSpeech {args.split}: {dropped_long} clips longer than 30 s dropped (rule L1)")
+    print(f"{args.run}: {args.model} on {args.dataset} {args.split} ({len(rows)} utterances), decode={cfg}")
 
     t0 = time.time()
     hyps, capped, gpu = transcribe(args.model, list(audios), cfg, args.batch_size)
@@ -113,7 +123,8 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(utts[0]))
         w.writeheader()
         w.writerows(utts)
-    summary = {"run": args.run, "model": args.model, "split": args.split, "subset": args.subset,
+    summary = {"run": args.run, "model": args.model, "dataset": args.dataset, "split": args.split,
+               "subset": args.subset, "dropped_over_30s": dropped_long,
                "limit": args.limit, "decode": cfg, "commit": git_commit(), "gpu": gpu,
                "eval_minutes": round(minutes, 2), "capped_outputs": capped_outputs, "long_outputs": long_outputs,
                "normalizer": text.NORMALIZER_VERSION, "unscored_empty_refs": unscored,
@@ -129,7 +140,8 @@ def main():
             if new:
                 w.writeheader()
             w.writerow({"date": dt.date.today().isoformat(), "run": args.run, "model": args.model,
-                        "split": args.split, "subset": args.subset or "", "utterances": p["utterances"],
+                        "split": args.split if args.dataset == "edacc" else f"librispeech-{args.split}",
+                        "subset": args.subset or "", "utterances": p["utterances"],
                         "hours": round(sum(u["duration"] for u in scored) / 3600, 2), "wer": round(p["wer"], 4),
                         "sub_rate": round(p["sub_rate"], 4), "del_rate": round(p["del_rate"], 4),
                         "ins_rate": round(p["ins_rate"], 4), "macro_group_wer": round(by_group["macro_over_groups"], 4),

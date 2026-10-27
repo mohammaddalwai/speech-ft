@@ -50,3 +50,30 @@ def fetch(dsd, row):
     if item["speaker"] != row["speaker"]:
         raise RuntimeError(f"{row['utt_id']}: expected {row['speaker']}, found {item['speaker']} (dataset changed?)")
     return decode_audio(item["audio"]), item["text"]
+
+
+# ---------- LibriSpeech (forgetting check only) ----------
+LIBRI_REPO = "openslr/librispeech_asr"
+LIBRI_FILES = {"test-clean": "clean/test/*.parquet", "test-other": "other/test/*.parquet"}
+MAX_SEC = 30.0
+
+
+def librispeech_items(split, limit=None):
+    """Rows, audio and reference texts for one LibriSpeech test set. Rule L1: clips longer than 30 s are dropped
+    (Whisper's input limit, same as R2 for EdAcc) and counted. Only that split's files are downloaded."""
+    from datasets import Audio, load_dataset
+
+    ds = load_dataset(LIBRI_REPO, data_files={"test": LIBRI_FILES[split]}, split="test")
+    ds = ds.cast_column("audio", Audio(decode=False))
+    rows, audios, refs, dropped = [], [], [], 0
+    for i in range(min(limit, len(ds)) if limit else len(ds)):
+        item = ds[i]
+        wav = decode_audio(item["audio"])
+        if len(wav) / SR > MAX_SEC:
+            dropped += 1
+            continue
+        rows.append({"utt_id": str(item["id"]), "speaker": str(item["speaker_id"]), "group": split,
+                     "l1_english": "n/a", "duration": round(len(wav) / SR, 3)})
+        audios.append(wav)
+        refs.append(item["text"])
+    return rows, audios, refs, dropped

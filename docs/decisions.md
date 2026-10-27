@@ -51,6 +51,11 @@ Cut: E4, E5, E6, Common Voice.
 - Before E1: (a) debug run, 200 steps on 1,600 train / 200 val utterances: training loss must fall; (b) overfit test on 32 train clips at learning rate 1e-4: WER on those same clips must approach 0.
 - Checkpoints of full runs go to a private Hugging Face repo (<user>/speech-ft-<run>), latest checkpoint kept for resuming; history is squashed at the end to save storage.
 
+## Forgetting check (fixed 2026-10-26, before running it)
+- LibriSpeech test-clean and test-other (openslr/librispeech_asr, parquet), same decoding and normalizer as everything else, L4.
+- Rule L1: clips longer than 30 s are dropped (Whisper's input limit, as R2 for EdAcc); the number dropped is reported.
+- Compared: zero-shot whisper-small (E0) vs E1. E3 (replay) is triggered if E1's WER is more than 10% higher (relative) than E0's on either test set (scripts/forgetting_check.py).
+
 ## EdAcc facts (census, 2026-10-24)
 - 61 conversations with 2 speakers each (122 speakers), 19,137 segments, 32.74 h. Audio is 32 kHz.
 - Official validation and test splits share no conversation.
@@ -89,3 +94,6 @@ Known costs of these rules (report in README and model card):
 - 2026-10-25: Gate 1: zero-shot whisper-small on the 1,000-utterance val sample, pooled WER 30.24% (normalizer v1, commit ae5a5c5). Rule says >= 10%, so EdAcc is the dataset; L2-ARCTIC not measured. Error review of that run: two looping outputs ("blah" x192, "mmmm...") add about 1.5 points; filler spellings and spelling conventions led to normalizer v2. The word-count hallucination check missed the "mmmm..." loop, so outputs that hit the token cap are now counted too. The Gate 1 row in results.csv stays as a decision record (normalizer v1).
 - 2026-10-25: Zero-shot baselines on full val (normalizer v2): small 29.42%, medium 25.66%, turbo 23.83% WER. Deletions barely shrink with model size (12.5% -> 11.4%) while substitutions do (12.2% -> 9.2%), so most deletions look like a transcription-style gap that a bigger model does not close.
 - 2026-10-25: Bug in the capped-output count: it flagged the longest output in every batch, because generate() leaves the end token off that output (counts were 62/121/118). Fixed in evaluate.py to count generated text tokens. Counts for the four earlier runs recounted with scripts/fix_capped.py (heuristic: re-tokenized length or a 40+ character "word"). WER is unaffected. Also: the "-dirty" commit tag no longer counts changes inside results/.
+- 2026-10-25: E1 trained: 2,000 steps (no early stop), 38.9 min on an A100 80GB, peak 6.7 GB. Val WER during training was noisy (28.7, 31.6, 25.7, 25.4, 29.3, 26.0, 24.8, 25.3%) while val loss rose from the first check (0.61 -> 0.80): overfitting by loss. Best checkpoint: step 1750, pushed to mddalwai/speech-ft-E1 (private).
+- 2026-10-25: Official E1 val (L4): 24.77% WER (sub 14.3%, del 4.8%, ins 5.7%), 0 looping outputs. Gate 2 passed (bar 29.42%). Still about 1 point behind zero-shot turbo (23.83%). The match with step 1750's training-time WER (24.80%, vs 25.25% at step 2000) confirms the Hub copy is the best checkpoint.
+- 2026-10-25: Where E1's gain comes from (scripts/compare_runs.py, E0_small_val -> E1_val, % of reference words): deleted -> correct 6.1 pts, mostly short discourse words and repeats; substituted -> correct 3.5 pts; correct -> wrong 3.9 pts. On words the zero-shot model already attempted, recognition is roughly flat; the gain is mostly learning EdAcc's word-for-word transcription style. Claims about "better recognition of accented speech" are not supported by val.
