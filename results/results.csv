@@ -4,3 +4,7 @@ date,run,model,split,subset,utterances,hours,wer,sub_rate,del_rate,ins_rate,macr
 2026-10-26,E0b_medium_val,openai/whisper-medium,val,,1785,2.38,0.2566,0.0994,0.1252,0.032,0.2437,2,2,v2,1074842-dirty,NVIDIA L4,4.3
 2026-10-26,E0c_turbo_val,openai/whisper-large-v3-turbo,val,,1785,2.38,0.2383,0.0915,0.1135,0.0332,0.2291,1,0,v2,1074842-dirty,NVIDIA L4,3.51
 2026-10-26,E1_val,mddalwai/speech-ft-E1,val,,1785,2.38,0.2477,0.143,0.0475,0.0573,0.2342,0,0,v2,632a38e,NVIDIA L4,1.7
+2026-10-27,E0_small_libri_clean,openai/whisper-small,librispeech-test-clean,,2611,5.32,0.0333,0.0241,0.0054,0.0038,0.0333,0,0,v2,ed26f1a,NVIDIA L4,2.55
+2026-10-27,E0_small_libri_other,openai/whisper-small,librispeech-test-other,,2932,5.28,0.0745,0.0564,0.0086,0.0095,0.0745,0,0,v2,ed26f1a,NVIDIA L4,2.39
+2026-10-27,E1_libri_clean,mddalwai/speech-ft-E1,librispeech-test-clean,,2611,5.32,0.047,0.0328,0.0075,0.0067,0.047,1,0,v2,ed26f1a,NVIDIA L4,2.45
+2026-10-27,E1_libri_other,mddalwai/speech-ft-E1,librispeech-test-other,,2932,5.28,0.1022,0.0742,0.0118,0.0162,0.1022,6,0,v2,ed26f1a,NVIDIA L4,2.48

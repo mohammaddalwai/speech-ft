@@ -1,0 +1,66 @@
+{
+  "run": "E1_libri_clean",
+  "model": "mddalwai/speech-ft-E1",
+  "dataset": "librispeech",
+  "split": "test-clean",
+  "subset": null,
+  "dropped_over_30s": 9,
+  "limit": null,
+  "decode": {
+    "language": "en",
+    "task": "transcribe",
+    "num_beams": 1,
+    "max_new_tokens": 224,
+    "dtype": "float16"
+  },
+  "commit": "ed26f1a",
+  "gpu": "NVIDIA L4",
+  "eval_minutes": 2.45,
+  "capped_outputs": 1,
+  "long_outputs": 0,
+  "normalizer": "v2",
+  "unscored_empty_refs": 0,
+  "outputs_on_unscored": 0,
+  "by_group": {
+    "pooled": {
+      "utterances": 2611,
+      "ref_words": 52357,
+      "wer": 0.04704242030674027,
+      "sub_rate": 0.03281318639341444,
+      "del_rate": 0.00748705999197815,
+      "ins_rate": 0.006742173921347671
+    },
+    "macro_over_groups": 0.04704242030674027,
+    "by_group": {
+      "test-clean": {
+        "utterances": 2611,
+        "ref_words": 52357,
+        "wer": 0.04704242030674027,
+        "sub_rate": 0.03281318639341444,
+        "del_rate": 0.00748705999197815,
+        "ins_rate": 0.006742173921347671
+      }
+    }
+  },
+  "by_l1_english": {
+    "pooled": {
+      "utterances": 2611,
+      "ref_words": 52357,
+      "wer": 0.04704242030674027,
+      "sub_rate": 0.03281318639341444,
+      "del_rate": 0.00748705999197815,
+      "ins_rate": 0.006742173921347671
+    },
+    "macro_over_groups": 0.04704242030674027,
+    "by_l1_english": {
+      "n/a": {
+        "utterances": 2611,
+        "ref_words": 52357,
+        "wer": 0.04704242030674027,
+        "sub_rate": 0.03281318639341444,
+        "del_rate": 0.00748705999197815,
+        "ins_rate": 0.006742173921347671
+      }
+    }
+  }
+}
