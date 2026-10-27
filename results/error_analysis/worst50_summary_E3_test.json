@@ -1,0 +1,27 @@
+{
+  "run": "E3_test",
+  "reviewed": 0,
+  "unreviewed": 50,
+  "labels": {
+    "names_rare_words": {
+      "utterances": 13,
+      "errors": 198
+    },
+    "outside_reference": {
+      "utterances": 5,
+      "errors": 70
+    },
+    "masked_word": {
+      "utterances": 7,
+      "errors": 105
+    },
+    "accent_or_fast_speech": {
+      "utterances": 24,
+      "errors": 348
+    },
+    "disfluency_mismatch": {
+      "utterances": 1,
+      "errors": 14
+    }
+  }
+}
