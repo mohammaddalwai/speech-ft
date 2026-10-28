@@ -1,27 +1,35 @@
 {
   "run": "E3_test",
-  "reviewed": 0,
-  "unreviewed": 50,
+  "reviewed": 50,
+  "unreviewed": 0,
   "labels": {
     "names_rare_words": {
-      "utterances": 13,
-      "errors": 198
+      "utterances": 10,
+      "errors": 152
     },
     "outside_reference": {
-      "utterances": 5,
-      "errors": 70
+      "utterances": 1,
+      "errors": 24
     },
     "masked_word": {
-      "utterances": 7,
-      "errors": 105
+      "utterances": 3,
+      "errors": 51
     },
     "accent_or_fast_speech": {
-      "utterances": 24,
-      "errors": 348
+      "utterances": 30,
+      "errors": 437
     },
     "disfluency_mismatch": {
       "utterances": 1,
       "errors": 14
+    },
+    "reference_error": {
+      "utterances": 2,
+      "errors": 23
+    },
+    "hallucination_loop": {
+      "utterances": 3,
+      "errors": 34
     }
   }
 }
