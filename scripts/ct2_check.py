@@ -1,12 +1,13 @@
 """Does the CTranslate2 model transcribe like the official model? Applies the pre-set rule in docs/decisions.md.
 
-    python scripts/ct2_check.py --ct2 ct2/E3-int8 --compute-type int8
     python scripts/ct2_check.py --ct2 ct2/E3-float32 --compute-type float32
+    python scripts/ct2_check.py --ct2 ct2/E3-int8 --compute-type int8
 
 Uses 500 random VAL clips (seed 0); val, not test, because this result decides what ships. The comparison is the
 official E3_val run (transformers, float16, L4) on exactly the same clips. Also prints the real-time factor on
 THIS machine, which is not the deployment CPU, so the speed number here is for orientation only.
-Writes results/runs/ct2_check_<compute type>/ (summary.json, utterances.csv).
+Writes results/runs/ct2_check_<compute type>_<serving version>/ (summary.json, utterances.csv); never overwrites.
+The v1 checks (before the audio-padding fix in src/asr.py) are kept as results/runs/ct2_check_<compute type>/.
 """
 import argparse
 import csv
@@ -24,12 +25,25 @@ from src import asr, data, metrics, text  # noqa: E402
 MAX_POINTS_WORSE = 1.0  # pre-set rule: int8 ships if at most 1.0 WER point above the official model
 
 
+def cpu_model():
+    try:
+        for line in open("/proc/cpuinfo"):
+            if line.startswith("model name"):
+                return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return "unknown"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ct2", required=True, help="local CTranslate2 folder")
     ap.add_argument("--compute-type", required=True, choices=["int8", "float32"])
     ap.add_argument("--n", type=int, default=500)
     args = ap.parse_args()
+    out = ROOT / "results" / "runs" / f"ct2_check_{args.compute_type}_{asr.SERVING_VERSION}"
+    if out.exists():
+        raise SystemExit(f"{out} exists. Never overwrite a result.")
 
     rows = random.Random(0).sample(data.split_rows("val"), args.n)
     with open(ROOT / "results" / "runs" / "E3_val" / "utterances.csv") as f:
@@ -62,20 +76,21 @@ def main():
     diff = 100 * (ct2["wer"] - off["wer"])
     same = sum(u["same_as_official"] for u in utts)
     passed = diff <= MAX_POINTS_WORSE
-    summary = {"ct2": args.ct2, "compute_type": args.compute_type, "clips": len(utts), "scored": len(scored_ids),
+    summary = {"ct2": args.ct2, "compute_type": args.compute_type, "serving_version": asr.SERVING_VERSION,
+               "clips": len(utts), "scored": len(scored_ids),
                "wer_ct2": ct2["wer"], "wer_official_same_clips": off["wer"], "difference_points": diff,
                "identical_outputs": same, "rtf_this_machine": secs_compute / secs_audio,
-               "cpu_count_this_machine": os.cpu_count(), "rule_max_points_worse": MAX_POINTS_WORSE,
+               "cpu_count_this_machine": os.cpu_count(), "cpu_model_this_machine": cpu_model(),
+               "rule_max_points_worse": MAX_POINTS_WORSE,
                "within_rule": passed}
-    out = ROOT / "results" / "runs" / f"ct2_check_{args.compute_type}"
-    out.mkdir(parents=True, exist_ok=True)
+    out.mkdir(parents=True)
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
     with open(out / "utterances.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(utts[0]))
         w.writeheader()
         w.writerows(utts)
 
-    print(f"\n{args.compute_type}: WER {ct2['wer']:.2%} vs official {off['wer']:.2%} on the same {len(scored_ids)} clips "
+    print(f"\n{args.compute_type} (serving {asr.SERVING_VERSION}): WER {ct2['wer']:.2%} vs official {off['wer']:.2%} on the same {len(scored_ids)} clips "
           f"-> {diff:+.2f} points | identical outputs {same}/{len(utts)}")
     print(f"real-time factor on this machine ({os.cpu_count()} CPUs): {summary['rtf_this_machine']:.3f} "
           f"(orientation only; the reported speed comes from the Space)")

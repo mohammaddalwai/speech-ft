@@ -1,9 +1,11 @@
-"""Serving and release guards: decoding settings match the evaluation, model cards fill, unchecked models never ship."""
+"""Serving and release guards: decoding settings and encoder input match the evaluation, model cards fill,
+unchecked models never ship."""
 import importlib.util
 import json
 import pathlib
 import sys
 
+import numpy as np
 import pytest
 import yaml
 
@@ -15,8 +17,8 @@ spec = importlib.util.spec_from_file_location("publish_model", ROOT / "scripts" 
 publish = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(publish)
 
-CHECK = {"ct2": "ct2/E3-int8", "wer_ct2": 0.2401, "wer_official_same_clips": 0.2390, "difference_points": 0.11,
-         "identical_outputs": 431, "clips": 500,
+CHECK = {"ct2": "ct2/E3-int8", "serving_version": asr.SERVING_VERSION, "wer_ct2": 0.2401,
+         "wer_official_same_clips": 0.2390, "difference_points": 0.11, "identical_outputs": 431, "clips": 500,
          "within_rule": True}
 
 
@@ -29,6 +31,34 @@ def test_serving_decode_matches_evaluation():
     assert s["temperature"] == 0.0 and s["best_of"] == 1 and s["compression_ratio_threshold"] is None
     assert s["log_prob_threshold"] is None and s["no_speech_threshold"] is None
     assert s["without_timestamps"] and not s["vad_filter"] and not s["condition_on_previous_text"]
+
+
+def encoder_input_faster_whisper(audio):
+    """What faster-whisper 1.2.1 feeds the encoder for a clip of at most 30 s (feature_extractor.py, transcribe.py:
+    features of the audio + 160 samples, the last frame dropped, then zero-padded or cut to 3000 frames)."""
+    from faster_whisper.audio import pad_or_trim
+    from faster_whisper.feature_extractor import FeatureExtractor
+
+    f = FeatureExtractor()(audio)
+    return pad_or_trim(f[:, : f.shape[-1] - 1])
+
+
+# Clips that end within 12.5 ms of 30 s differ in the last of 3000 frames only (edge handling of the final
+# window); clips over 30 s are rejected by the service and were dropped from every evaluation (rule R2).
+@pytest.mark.parametrize("seconds", [0.4, 4.0, 15.0, 29.5])
+def test_serving_encoder_input_matches_transformers(seconds):
+    pytest.importorskip("faster_whisper")
+    from transformers import WhisperFeatureExtractor
+
+    rng = np.random.default_rng(0)
+    t = np.arange(int(seconds * asr.SR)) / asr.SR
+    audio = (0.3 * np.sin(2 * np.pi * 220 * t) + 0.05 * rng.standard_normal(len(t))).astype(np.float32)
+    want = WhisperFeatureExtractor()(audio, sampling_rate=asr.SR, return_tensors="np").input_features[0]
+    got = encoder_input_faster_whisper(asr.pad_to_window(audio))
+    assert got.shape == want.shape == (80, 3000)
+    assert np.abs(got - want).max() < 1e-3
+    if seconds < 29:  # without the fix, the padded frames differ (0.0 instead of the log-mel of silence)
+        assert np.abs(encoder_input_faster_whisper(audio) - want).max() > 0.1
 
 
 def test_model_cards_fill_completely():
@@ -47,7 +77,7 @@ def test_fill_refuses_leftover_placeholder():
 
 
 def write_check(tmp_path, compute_type, **changes):
-    d = tmp_path / f"ct2_check_{compute_type}"
+    d = tmp_path / f"ct2_check_{compute_type}_{asr.SERVING_VERSION}"
     d.mkdir()
     (d / "summary.json").write_text(json.dumps({**CHECK, **changes}))
 
@@ -59,6 +89,7 @@ def test_load_check_accepts_checked_passing_folder(tmp_path):
 
 @pytest.mark.parametrize("changes, ct2", [({"within_rule": False}, "ct2/E3-int8"),  # failed the rule
                                           ({}, "ct2/E3-float32"),                   # a different folder
+                                          ({"serving_version": "v1"}, "ct2/E3-int8"),  # old serving code
                                           (None, "ct2/E3-int8")])                   # never checked
 def test_load_check_refuses(tmp_path, changes, ct2):
     if changes is not None:

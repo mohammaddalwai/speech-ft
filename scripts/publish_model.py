@@ -7,15 +7,20 @@ Builds two folders under release/ and, with --upload, publishes them as PUBLIC r
   <user>/whisper-small-edacc       transformers weights + processor files + model card (docs/model_card.md)
   <user>/whisper-small-edacc-ct2   CTranslate2 weights for faster-whisper + short card (docs/model_card_ct2.md)
 Only inference files are copied from the private training repo: no optimizer state, no checkpoints, no audio.
-Refuses to publish a CTranslate2 folder that was not checked, or that failed the conversion rule.
+Refuses to publish a CTranslate2 folder that was not checked with the current serving code (src/asr.py), or that
+failed the conversion rule.
 """
 import argparse
 import json
 import pathlib
 import re
 import shutil
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from src import asr  # noqa: E402
+
 SOURCE = "mddalwai/speech-ft-E3"
 INFERENCE_FILES = ["config.json", "generation_config.json", "model.safetensors", "tokenizer.json",
                    "tokenizer_config.json", "processor_config.json", "preprocessor_config.json",
@@ -40,10 +45,12 @@ def card_values(user, compute_type, check):
 
 
 def load_check(ct2, compute_type, runs_dir=ROOT / "results" / "runs"):
-    path = pathlib.Path(runs_dir) / f"ct2_check_{compute_type}" / "summary.json"
+    path = pathlib.Path(runs_dir) / f"ct2_check_{compute_type}_{asr.SERVING_VERSION}" / "summary.json"
     if not path.exists():
         raise SystemExit(f"no conversion check found at {path}; run scripts/ct2_check.py first.")
     check = json.loads(path.read_text())
+    if check.get("serving_version") != asr.SERVING_VERSION:
+        raise SystemExit(f"{path} was made with serving {check.get('serving_version')}, not {asr.SERVING_VERSION}.")
     if pathlib.Path(check["ct2"]).resolve() != pathlib.Path(ct2).resolve():
         raise SystemExit(f"the check was run on {check['ct2']}, not on {ct2}; not publishing an unchecked folder.")
     if not check["within_rule"]:

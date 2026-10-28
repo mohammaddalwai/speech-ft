@@ -75,6 +75,8 @@ def main():
     ap.add_argument("--limit", type=int, help="only the first N utterances (smoke tests)")
     ap.add_argument("--run", required=True, help="run name, e.g. E0_small_gate1")
     ap.add_argument("--batch-size", type=int, default=32)
+    ap.add_argument("--dtype", choices=["float16", "bfloat16", "float32"],
+                    help="override configs/decode.yaml on GPU; only for controls, never for reported results")
     args = ap.parse_args()
 
     out_dir = ROOT / "results" / "runs" / args.run
@@ -87,6 +89,8 @@ def main():
         raise SystemExit(f"{out_dir} exists. Pick a new run name; never overwrite a result.")
     with open(ROOT / "configs" / "decode.yaml") as f:
         cfg = yaml.safe_load(f)
+    if args.dtype:
+        cfg["dtype"] = args.dtype  # recorded in summary.json under "decode"
 
     if (args.dataset == "librispeech") != args.split.startswith("test-"):
         raise SystemExit("EdAcc uses --split train/val/test; LibriSpeech uses --split test-clean/test-other")

@@ -20,12 +20,18 @@ Results, limitations, training data and license details are in that model card.
 original model (float16 on a GPU), a difference of {CT2_DIFF} points ({SAME} of {N} transcripts identical).
 
 ```python
-from faster_whisper import WhisperModel
+import numpy as np
+from faster_whisper import WhisperModel, decode_audio
 
 model = WhisperModel("{USER}/whisper-small-edacc-ct2", device="cpu", compute_type="{CT2_TYPE}")
-segments, _ = model.transcribe("clip.wav", language="en", beam_size=1, temperature=0.0,
-                               without_timestamps=True, condition_on_previous_text=False)
+audio = decode_audio("clip.wav")[:480000]           # 16 kHz mono, at most 30 s
+audio = np.pad(audio, (0, 480000 - len(audio)))     # pad the AUDIO to 30 s, as in training (see below)
+segments, _ = model.transcribe(audio, language="en", beam_size=1, temperature=0.0, without_timestamps=True,
+                               condition_on_previous_text=False)
 print(" ".join(s.text.strip() for s in segments))
 ```
+
+Why the padding line: faster-whisper pads its log-mel features with zeros, while the model was trained on features
+of audio padded with silence. Without the line, clips shorter than 30 s get input the model never saw in training.
 
 License: CC BY-SA 4.0 (EdAcc is CC BY-SA). Code: [github.com/mohammaddalwai/speech-ft](https://github.com/mohammaddalwai/speech-ft).

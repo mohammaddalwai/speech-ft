@@ -1,0 +1,14 @@
+{
+  "ct2": "ct2/E3-int8",
+  "compute_type": "int8",
+  "clips": 500,
+  "scored": 495,
+  "wer_ct2": 0.23139397519196692,
+  "wer_official_same_clips": 0.22415829887773184,
+  "difference_points": 0.7235676314235079,
+  "identical_outputs": 307,
+  "rtf_this_machine": 0.3683252543292964,
+  "cpu_count_this_machine": 8,
+  "rule_max_points_worse": 1.0,
+  "within_rule": true
+}
