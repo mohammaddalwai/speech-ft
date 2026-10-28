@@ -18,6 +18,8 @@ Results, limitations, training data and license details are in that model card.
 
 **Conversion check:** on {N} random validation clips, this version's WER was {CT2_WER} against {OFF_WER} for the
 original model (float16 on a GPU), a difference of {CT2_DIFF} points ({SAME} of {N} transcripts identical).
+A float32 conversion (not published) scored {F32_WER} on the same clips ({F32_DIFF} points, {F32_SAME} of {N}
+identical), so the serving code reproduces the original model and the remaining {CT2_TYPE} difference is rounding.
 
 ```python
 import numpy as np

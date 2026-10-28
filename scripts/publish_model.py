@@ -7,8 +7,8 @@ Builds two folders under release/ and, with --upload, publishes them as PUBLIC r
   <user>/whisper-small-edacc       transformers weights + processor files + model card (docs/model_card.md)
   <user>/whisper-small-edacc-ct2   CTranslate2 weights for faster-whisper + short card (docs/model_card_ct2.md)
 Only inference files are copied from the private training repo: no optimizer state, no checkpoints, no audio.
-Refuses to publish a CTranslate2 folder that was not checked with the current serving code (src/asr.py), or that
-failed the conversion rule.
+Refuses to publish a CTranslate2 folder that was not checked with the current serving code (src/asr.py), that
+failed the conversion rule, or when the float32 control failed (the serving code itself is then not accepted).
 """
 import argparse
 import json
@@ -25,6 +25,7 @@ SOURCE = "mddalwai/speech-ft-E3"
 INFERENCE_FILES = ["config.json", "generation_config.json", "model.safetensors", "tokenizer.json",
                    "tokenizer_config.json", "processor_config.json", "preprocessor_config.json",
                    "special_tokens_map.json", "added_tokens.json", "vocab.json", "merges.txt", "normalizer.json"]
+MAX_CONTROL_POINTS_WORSE = 0.5
 PLACEHOLDER = re.compile(r"\{[A-Z0-9_]+\}")
 
 
@@ -38,10 +39,12 @@ def fill(template, values):
     return out
 
 
-def card_values(user, compute_type, check):
+def card_values(user, compute_type, check, control):
     return {"USER": user, "CT2_TYPE": compute_type, "CT2_WER": f"{check['wer_ct2']:.2%}",
             "OFF_WER": f"{check['wer_official_same_clips']:.2%}", "CT2_DIFF": f"{check['difference_points']:+.2f}",
-            "SAME": str(check["identical_outputs"]), "N": str(check["clips"])}
+            "SAME": str(check["identical_outputs"]), "N": str(check["clips"]),
+            "F32_WER": f"{control['wer_ct2']:.2%}", "F32_DIFF": f"{control['difference_points']:+.2f}",
+            "F32_SAME": str(control["identical_outputs"])}
 
 
 def load_check(ct2, compute_type, runs_dir=ROOT / "results" / "runs"):
@@ -56,6 +59,20 @@ def load_check(ct2, compute_type, runs_dir=ROOT / "results" / "runs"):
     if not check["within_rule"]:
         raise SystemExit(f"{compute_type} failed the conversion rule; not publishing it.")
     return check
+
+
+def load_control(runs_dir=ROOT / "results" / "runs"):
+    """Rule (a), docs/decisions.md 2026-10-28: the serving code is accepted only if the float32 conversion is at most
+    0.5 points worse than the official model."""
+    path = pathlib.Path(runs_dir) / f"ct2_check_float32_{asr.SERVING_VERSION}" / "summary.json"
+    if not path.exists():
+        raise SystemExit(f"no float32 control at {path}; run scripts/ct2_check.py with --compute-type float32 first.")
+    control = json.loads(path.read_text())
+    if control.get("serving_version") != asr.SERVING_VERSION:
+        raise SystemExit(f"{path} was made with serving {control.get('serving_version')}, not {asr.SERVING_VERSION}.")
+    if control["difference_points"] > MAX_CONTROL_POINTS_WORSE:
+        raise SystemExit(f"float32 control is {control['difference_points']:+.2f} points: serving code not accepted.")
+    return control
 
 
 def build(ct2, values, source, out_dir):
@@ -92,10 +109,10 @@ def main():
     from huggingface_hub import HfApi
     from transformers import WhisperForConditionalGeneration, WhisperProcessor
 
-    check = load_check(args.ct2, args.compute_type)
+    check, control = load_check(args.ct2, args.compute_type), load_control()
     api = HfApi()
     user = api.whoami()["name"]
-    values = card_values(user, args.compute_type, check)
+    values = card_values(user, args.compute_type, check, control)
     hf_dir, ct2_dir = build(args.ct2, values, args.source, ROOT / "release")
 
     WhisperProcessor.from_pretrained(str(hf_dir))  # fails here, not after publishing, if a file is missing

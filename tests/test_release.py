@@ -20,6 +20,7 @@ spec.loader.exec_module(publish)
 CHECK = {"ct2": "ct2/E3-int8", "serving_version": asr.SERVING_VERSION, "wer_ct2": 0.2401,
          "wer_official_same_clips": 0.2390, "difference_points": 0.11, "identical_outputs": 431, "clips": 500,
          "within_rule": True}
+CONTROL = {**CHECK, "ct2": "ct2/E3-float32", "wer_ct2": 0.2235, "difference_points": -0.05, "identical_outputs": 490}
 
 
 def test_serving_decode_matches_evaluation():
@@ -62,13 +63,14 @@ def test_serving_encoder_input_matches_transformers(seconds):
 
 
 def test_model_cards_fill_completely():
-    values = publish.card_values("someone", "int8", CHECK)
+    values = publish.card_values("someone", "int8", CHECK, CONTROL)
     assert values["CT2_WER"] == "24.01%" and values["CT2_DIFF"] == "+0.11"
     for name in ("model_card.md", "model_card_ct2.md"):
         text = publish.fill((ROOT / "docs" / name).read_text(), values)
         assert "{" + "USER}" not in text and "someone/whisper-small-edacc" in text
         assert text.startswith("---\nlicense: cc-by-sa-4.0")
-    assert "431 of 500 transcripts identical" in publish.fill((ROOT / "docs" / "model_card_ct2.md").read_text(), values)
+    ct2_card = publish.fill((ROOT / "docs" / "model_card_ct2.md").read_text(), values)
+    assert "431 of 500 transcripts identical" in ct2_card and "22.35% on the same clips (-0.05 points, 490 of 500" in ct2_card
 
 
 def test_fill_refuses_leftover_placeholder():
@@ -96,3 +98,18 @@ def test_load_check_refuses(tmp_path, changes, ct2):
         write_check(tmp_path, "int8", **changes)
     with pytest.raises(SystemExit):
         publish.load_check(ct2, "int8", runs_dir=tmp_path)
+
+
+def test_control_gate(tmp_path):
+    write_check(tmp_path, "float32", **CONTROL)
+    assert publish.load_control(runs_dir=tmp_path)["identical_outputs"] == 490
+    for changes in ({"difference_points": 0.81}, {"serving_version": "v1"}):
+        d = tmp_path / "bad"
+        d.mkdir(exist_ok=True)
+        write_check(d, "float32", **{**CONTROL, **changes})
+        with pytest.raises(SystemExit):
+            publish.load_control(runs_dir=d)
+        import shutil
+        shutil.rmtree(d)
+    with pytest.raises(SystemExit):  # never run
+        publish.load_control(runs_dir=tmp_path / "empty")

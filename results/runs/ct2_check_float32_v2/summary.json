@@ -1,0 +1,16 @@
+{
+  "ct2": "ct2/E3-float32",
+  "compute_type": "float32",
+  "serving_version": "v2",
+  "clips": 500,
+  "scored": 495,
+  "wer_ct2": 0.22327229769639692,
+  "wer_official_same_clips": 0.22415829887773184,
+  "difference_points": -0.08860011813349167,
+  "identical_outputs": 491,
+  "rtf_this_machine": 0.48267216858319256,
+  "cpu_count_this_machine": 8,
+  "cpu_model_this_machine": "AMD EPYC 7B12",
+  "rule_max_points_worse": 1.0,
+  "within_rule": true
+}

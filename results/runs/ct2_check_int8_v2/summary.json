@@ -1,0 +1,16 @@
+{
+  "ct2": "ct2/E3-int8",
+  "compute_type": "int8",
+  "serving_version": "v2",
+  "clips": 500,
+  "scored": 495,
+  "wer_ct2": 0.2247489663319551,
+  "wer_official_same_clips": 0.22415829887773184,
+  "difference_points": 0.05906674542232593,
+  "identical_outputs": 375,
+  "rtf_this_machine": 0.34309995274540733,
+  "cpu_count_this_machine": 8,
+  "cpu_model_this_machine": "AMD EPYC 7B12",
+  "rule_max_points_worse": 1.0,
+  "within_rule": true
+}
