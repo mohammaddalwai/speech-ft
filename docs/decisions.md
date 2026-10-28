@@ -68,6 +68,15 @@ Cut: E4, E5, E6, Common Voice.
 - Per-group results: point WER for every group; bootstrap intervals only for groups with at least 5 test speakers (fewer gives falsely narrow intervals).
 - The served model is E3 seed 42 (chosen now, not by test results).
 
+## Serving and release (fixed 2026-10-27, before conversion)
+- Served model: E3 seed 42, converted to CTranslate2 (scripts/export_ct2.py) and run with faster-whisper on CPU. Decoding is set explicitly to match configs/decode.yaml: greedy, temperature 0 with no fallback, no timestamps, no voice-activity filter, no previous-text prompt, at most 224 new tokens. faster-whisper's own defaults differ (beam 5, fallback, timestamps), so src/asr.py sets every one and tests/test_release.py checks it.
+- Conversion check (scripts/ct2_check.py): 500 random val clips (seed 0), compared with the official E3_val output on exactly the same clips. Val, not test, because this result decides what ships.
+- Where: a Colab x86 CPU. Not the Mac: its ARM CPU gave different int8 output in Phase 0. Not the Space: it cannot hold the dataset. Colab's x86 CPU stands in for the Space's; small differences between x86 CPUs are possible and are not checked.
+- Rule: ship int8 if its WER on those clips is at most 1.0 point above the official model's. Otherwise float32 under the same rule. If both fail, stop and debug the conversion; nothing is published.
+- Whatever ships, its measured difference is printed in the CTranslate2 model card, so the demo's accuracy is not silently assumed to equal the reported test numbers.
+- Speed: the README's speed numbers come from the Space only (real-time factor after one warm-up request, and cold start). Colab speed numbers are for orientation and are not reported.
+- Release: public repos <user>/whisper-small-edacc (transformers) and <user>/whisper-small-edacc-ct2 (CTranslate2), license CC BY-SA 4.0 because EdAcc is CC BY-SA (LibriSpeech is CC BY 4.0, whisper-small Apache 2.0). Inference files only, no optimizer state or checkpoints. The training repos (speech-ft-E1, -E3, seeds) stay private. No EdAcc or LibriSpeech audio is published anywhere: not in the repos, the Space, its examples or the README.
+
 ## EdAcc facts (census, 2026-10-24)
 - 61 conversations with 2 speakers each (122 speakers), 19,137 segments, 32.74 h. Audio is 32 kHz.
 - Official validation and test splits share no conversation.
