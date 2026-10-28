@@ -28,21 +28,22 @@ A CTranslate2 version for fast CPU inference with faster-whisper is at
 ## Results
 
 EdAcc test split: 28 speakers and 14 conversations that never appear in training or validation (3,351 clips of at
-most 30 s). WER is pooled over words after Whisper's English text normalizer plus a few extra filler and spelling
-rules (see the repo). Greedy decoding for every model.
+most 30 s, 3,341 with words to score). WER is pooled over words after Whisper's English text normalizer plus a few
+extra filler and spelling rules (see the repo). Greedy decoding for every model.
 
 | Model | Params | EdAcc test WER | LibriSpeech test-clean / test-other |
 |---|---|---|---|
 | Whisper-small, zero-shot | 244M | 22.5% | 3.3% / 7.5% |
 | Whisper-medium, zero-shot | 769M | 19.8% | - |
 | Whisper-large-v3-turbo, zero-shot | 809M | 18.2% | - |
-| **This model** | 244M | **16.3%** (3 training seeds: 16.8% +/- 0.4) | 3.9% / 8.6% |
+| **This model** | 244M | **16.3%** (3 training seeds: mean 16.8%, std 0.4) | 3.9% / 8.6% |
 
 - vs zero-shot Whisper-small: -6.2 points, 95% interval [-8.7, -4.2] (paired bootstrap over speakers).
 - vs zero-shot large-v3-turbo: -1.9 points, 95% interval [-3.2, -0.7]. On the validation split the two were tied
   (23.9% vs 23.8%), so the advantage depends on which speakers are tested: read it as "on par with or better than".
-- Zero-shot Whisper-small looped on 6 very short test clips ("ha ha ha ..."), which adds about 1.8 points to its
-  WER. Without the 14 clips where any model looped: zero-shot small 20.7%, turbo 17.9%, this model 16.2%
+- Zero-shot Whisper-small looped on 6 short test clips (under 8 s), repeating a word or phrase until the output
+  limit ("no no no ..."), which adds about 1.8 points to its WER. Without the 14 clips where any model looped:
+  zero-shot small 20.7%, turbo 17.9%, this model 16.2%
   (a check done after seeing the results, reported next to, not instead of, the official numbers).
 
 ## Where the improvement comes from
@@ -56,12 +57,14 @@ fast or accented speech (60% of their errors) and names, titles and rare words (
 
 ## Limitations
 
-- Output is lowercase without punctuation, and fillers and repeats ("uh", "I I") are written out, because the
+- Output is lowercase without punctuation, and fillers and repeats ("uh", "i i") are written out, because the
   training transcripts are written that way.
 - Short-form only: evaluated on clips of at most 30 s. Long recordings were not evaluated.
 - Worse than the base model on read speech: LibriSpeech WER is about 16% higher (relative) than zero-shot
   Whisper-small. Without replay it was about 40% higher.
 - Accent groups have only 2-6 test speakers each, so per-accent numbers are anecdotal.
+- Not directly comparable with WERs in the EdAcc paper: segments over 30 s were dropped and text normalization
+  differs.
 - Trained and tested on casual video-call conversations in English. Other domains, noise conditions and
   languages were not tested.
 - Rare looping outputs still happen (1 of 3,351 test clips).

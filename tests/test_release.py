@@ -19,7 +19,7 @@ spec.loader.exec_module(publish)
 
 CHECK = {"ct2": "ct2/E3-int8", "serving_version": asr.SERVING_VERSION, "wer_ct2": 0.2401,
          "wer_official_same_clips": 0.2390, "difference_points": 0.11, "identical_outputs": 431, "clips": 500,
-         "within_rule": True}
+         "within_rule": True, "cpu_model_this_machine": "AMD EPYC 7B12"}
 CONTROL = {**CHECK, "ct2": "ct2/E3-float32", "wer_ct2": 0.2235, "difference_points": -0.05, "identical_outputs": 490}
 
 
@@ -70,6 +70,7 @@ def test_model_cards_fill_completely():
         assert "{" + "USER}" not in text and "someone/whisper-small-edacc" in text
         assert text.startswith("---\nlicense: cc-by-sa-4.0")
     ct2_card = publish.fill((ROOT / "docs" / "model_card_ct2.md").read_text(), values)
+    assert "this check ran on an AMD EPYC 7B12 CPU" in ct2_card
     assert "431 of 500 transcripts identical" in ct2_card and "22.35% on the same clips (-0.05 points, 490 of 500" in ct2_card
 
 

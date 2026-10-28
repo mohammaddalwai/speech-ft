@@ -43,6 +43,7 @@ def card_values(user, compute_type, check, control):
     return {"USER": user, "CT2_TYPE": compute_type, "CT2_WER": f"{check['wer_ct2']:.2%}",
             "OFF_WER": f"{check['wer_official_same_clips']:.2%}", "CT2_DIFF": f"{check['difference_points']:+.2f}",
             "SAME": str(check["identical_outputs"]), "N": str(check["clips"]),
+            "CPU": check.get("cpu_model_this_machine", "unknown"),
             "F32_WER": f"{control['wer_ct2']:.2%}", "F32_DIFF": f"{control['difference_points']:+.2f}",
             "F32_SAME": str(control["identical_outputs"])}
 
