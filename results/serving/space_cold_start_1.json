@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-28T19:35:39",
+  "url": "https://mddalwai-whisper-small-edacc-demo.hf.space",
+  "repo": "mddalwai/whisper-small-edacc-demo",
+  "restarts": [
+    {
+      "restart_to_ready_seconds": 15.3,
+      "load_seconds": 0.57,
+      "warmup_seconds": 2.42
+    },
+    {
+      "restart_to_ready_seconds": 15.3,
+      "load_seconds": 0.6,
+      "warmup_seconds": 2.65
+    },
+    {
+      "restart_to_ready_seconds": 13.2,
+      "load_seconds": 0.48,
+      "warmup_seconds": 2.22
+    }
+  ],
+  "restart_to_ready_seconds": {
+    "median": 15.3,
+    "max": 15.3,
+    "n": 3
+  }
+}
