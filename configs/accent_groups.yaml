@@ -1,5 +1,5 @@
 # Accent groups for EdAcc, keyed by each speaker's first language (the `l1` column).
-# Fixed 2026-10-24 from metadata and speaker counts only, before any per-group WER was computed.
+# Fixed from metadata and speaker counts only, before any per-group WER was computed.
 # Spellings ("Ghanain", "Portoguese") are copied exactly from the dataset.
 
 min_speakers: 4   # groups with fewer speakers are merged into "other" (decided by speaker count, never by WER)

@@ -1,4 +1,4 @@
-"""The style check's transforms do exactly what docs/decisions.md says (2026-10-28)."""
+"""The style check's transforms do exactly what docs/decisions.md says."""
 import importlib.util
 import pathlib
 

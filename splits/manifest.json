@@ -1,7 +1,6 @@
 {
   "dataset": "edinburghcstr/edacc",
   "revision": "d9ae7bd344f0562b766ec93ee5ce8f2f9568ce66",
-  "created": "2026-10-25",
   "rules": {
     "R1": "drop segments containing IGNORE_TIME_SEGMENT_IN_SCORING (untranscribed speech)",
     "R1b": "drop segments containing <FOREIGN> (untranscribed foreign-language speech)",

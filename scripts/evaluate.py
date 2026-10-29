@@ -10,7 +10,6 @@ Writes results/runs/<run>/utterances.csv and summary.json, and appends one row t
 """
 import argparse
 import csv
-import datetime as dt
 import json
 import pathlib
 import subprocess
@@ -23,7 +22,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from src import data, metrics, text  # noqa: E402
 
-RESULT_COLS = ["date", "run", "model", "split", "subset", "utterances", "hours", "wer", "sub_rate", "del_rate",
+RESULT_COLS = ["run", "model", "split", "subset", "utterances", "hours", "wer", "sub_rate", "del_rate",
                "ins_rate", "macro_group_wer", "capped_outputs", "long_outputs", "normalizer", "commit", "gpu",
                "eval_minutes"]
 
@@ -143,7 +142,7 @@ def main():
             w = csv.DictWriter(f, fieldnames=RESULT_COLS)
             if new:
                 w.writeheader()
-            w.writerow({"date": dt.date.today().isoformat(), "run": args.run, "model": args.model,
+            w.writerow({"run": args.run, "model": args.model,
                         "split": args.split if args.dataset == "edacc" else f"librispeech-{args.split}",
                         "subset": args.subset or "", "utterances": p["utterances"],
                         "hours": round(sum(u["duration"] for u in scored) / 3600, 2), "wer": round(p["wer"], 4),

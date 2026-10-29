@@ -1,4 +1,4 @@
-"""One-off fix (2026-10-25): recount "capped" outputs for runs made before the token-cap bug was fixed.
+"""One-off fix: recount "capped" outputs for runs made before the token-cap bug was fixed.
 
 The old check flagged the longest output in every batch, because generate() leaves the end token off it.
 This script re-tokenizes each saved output with the run's own tokenizer and flags outputs with at least

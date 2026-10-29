@@ -17,7 +17,7 @@ import numpy as np
 import yaml
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SERVING_VERSION = "v2"  # v1: no audio padding (2026-10-27/28 checks); v2: audio padded to 30 s
+SERVING_VERSION = "v2"  # v1: no audio padding (first checks); v2: audio padded to 30 s
 SR = 16000
 N_SAMPLES = 30 * SR  # Whisper's input window
 

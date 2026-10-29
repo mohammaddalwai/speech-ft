@@ -1,4 +1,4 @@
-# Serving image only (Phase 4, CPU, Docker). Versions checked on PyPI 2026-10-21.
+# Serving image only (Phase 4, CPU, Docker). Versions pinned.
 faster-whisper==1.2.1
 ctranslate2==4.8.3
 fastapi==0.159.1

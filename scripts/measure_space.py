@@ -1,4 +1,4 @@
-"""Speed of the live Space, as fixed in docs/decisions.md (2026-10-28, before the Space existed). Run on the Mac.
+"""Speed of the live Space, as fixed in docs/decisions.md before the Space existed. Run on the Mac.
 
     python scripts/measure_space.py latency /tmp/lat/*.aiff
     python scripts/measure_space.py cold-start
@@ -12,7 +12,6 @@ cold-start: restarts the Space through the API (needs `hf auth login`) and times
 Results go to results/serving/space_<mode>_<n>.json; an existing file is never overwritten.
 """
 import argparse
-import datetime
 import json
 import pathlib
 import ssl
@@ -62,7 +61,7 @@ def save(mode, result):
 
 
 def latency(args):
-    health = call("/health")
+    health = {k: v for k, v in call("/health").items() if k != "started_at"}  # a timestamp
     clips = [(pathlib.Path(p).name, pathlib.Path(p).read_bytes()) for p in args.clips]
     call("/transcribe", clips[0][1])  # warm-up, not counted
     rows = []
@@ -85,7 +84,7 @@ def latency(args):
         s, t = row["server_seconds"], row["round_trip_seconds"]
         print(f"{name:14} {r['audio_seconds']:8.1f} {s['median']:9.2f} / {s['max']:<9.2f} "
               f"{t['median']:11.2f} / {t['max']:<10.2f} {row['words']}")
-    save("latency", {"date": datetime.datetime.now().isoformat(timespec="seconds"), "url": URL,
+    save("latency", {"url": URL,
                      "health": health, "repeats": args.repeats, "clips": rows})
 
 
@@ -113,7 +112,7 @@ def cold_start(args):
         print(f"restart {i + 1}: ready after {row['restart_to_ready_seconds']} s "
               f"(model load {row['load_seconds']} s, warm-up {row['warmup_seconds']} s)")
         time.sleep(args.pause)
-    save("cold_start", {"date": datetime.datetime.now().isoformat(timespec="seconds"), "url": URL, "repo": REPO,
+    save("cold_start", {"url": URL, "repo": REPO,
                         "restarts": rows,
                         "restart_to_ready_seconds": summarize([r["restart_to_ready_seconds"] for r in rows])})
 

@@ -15,7 +15,6 @@ import json
 import random
 import re
 import statistics as st
-from datetime import date
 
 import soundfile as sf
 import yaml
@@ -169,7 +168,7 @@ def write_outputs(usable, assign, group, l1_eng, small, stats, revision, n_dropp
             "speakers_by_group": dict(sorted(collections.Counter(
                 group[sp] for sp in {r["speaker"] for r in rs}).items())),
         }
-    manifest = {"dataset": REPO, "revision": revision, "created": date.today().isoformat(), "rules": RULES,
+    manifest = {"dataset": REPO, "revision": revision, "rules": RULES,
                 "merged_into_other": sorted(small), "dropped_segments": n_dropped, "search": stats,
                 "gate1_sample": len(gate1), "splits": summary}
     with open(f"{out}/manifest.json", "w") as f:

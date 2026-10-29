@@ -1,4 +1,4 @@
-# Training and evaluation environment. Python >= 3.10. Versions checked on PyPI 2026-10-21.
+# Training and evaluation environment. Python >= 3.10. Versions pinned.
 # torch is not pinned: use the CUDA build Colab ships with. transformers 5.x needs torch >= 2.6.
 transformers==5.20.2
 datasets==5.1.0

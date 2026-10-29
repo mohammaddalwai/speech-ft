@@ -1,5 +1,5 @@
 """Does the gain survive once transcription style is taken out? A check added after the test results
-(docs/decisions.md, 2026-10-28), with the rule fixed before computing it. No GPU: re-scores saved outputs.
+(docs/decisions.md), with the rule fixed before computing it. No GPU: re-scores saved outputs.
 
     python scripts/style_check.py
 

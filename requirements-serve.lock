@@ -1,5 +1,5 @@
-# Exact versions for the serving image: pip freeze of a clean Python 3.12 install of requirements-serve.txt
-# (2026-10-28). The Dockerfile installs this file, so rebuilding later gives the same packages.
+# Exact versions for the serving image: pip freeze of a clean Python 3.12 install of requirements-serve.txt.
+# The Dockerfile installs this file, so rebuilding later gives the same packages.
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1

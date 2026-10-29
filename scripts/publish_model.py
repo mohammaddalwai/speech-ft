@@ -65,7 +65,7 @@ def load_check(ct2, compute_type, runs_dir=ROOT / "results" / "runs"):
 
 
 def load_control(runs_dir=ROOT / "results" / "runs"):
-    """Rule (a), docs/decisions.md 2026-10-28: the serving code is accepted only if the float32 conversion is at most
+    """Rule (a) in docs/decisions.md (the float32 control): the serving code is accepted only if the float32 conversion is at most
     0.5 points worse than the official model."""
     path = pathlib.Path(runs_dir) / f"ct2_check_float32_{asr.SERVING_VERSION}" / "summary.json"
     if not path.exists():
