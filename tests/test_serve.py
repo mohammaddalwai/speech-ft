@@ -99,3 +99,10 @@ def test_timeout():
         m.delay = 1.0  # after the warm-up
         r = c.post("/transcribe", content=wav_bytes(1.0))
     assert r.status_code == 504
+
+
+def test_page_is_served():
+    with client(FakeModel()) as c:
+        r = c.get("/")
+    assert r.status_code == 200 and "text/html" in r.headers["content-type"]
+    assert 'fetch("transcribe"' in r.text and "never stored or logged" in r.text

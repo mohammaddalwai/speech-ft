@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accented English speech recognition</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 8h2M4 5v6M7 2v12M10 5v6M13 7v2' stroke='%230e7c86' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f2f5f8; --surface: #ffffff; --ink: #14213d; --muted: #556479; --line: #d3dbe5;
+    --accent: #0e7c86; --accent-ink: #ffffff; --rec: #c8102e; --bad: #a4161a;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1720; --surface: #16212d; --ink: #e6edf3; --muted: #97a7ba; --line: #2b3847;
+            --accent: #3cc1c9; --accent-ink: #0f1720; --rec: #ff5a6e; --bad: #ff8a8a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 1rem/1.55 var(--sans); }
+  main { max-width: 42rem; margin: 0 auto; padding: 3rem 1rem 4rem; }
+  a { color: var(--accent); text-underline-offset: 0.15em; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  header nav { display: flex; gap: 1.25rem; font-size: 0.95rem; margin-bottom: 2.5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 0.75rem; font-weight: 650; letter-spacing: -0.01em; text-wrap: balance; }
+  h2 { font-size: 1.15rem; margin: 3rem 0 0.75rem; font-weight: 650; }
+  .lede { color: var(--muted); margin: 0 0 2rem; max-width: 38rem; }
+
+  .recorder { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1rem;
+              background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 0.5rem 1.25rem 0.5rem 0.5rem; }
+  .rec-btn { display: inline-flex; align-items: center; gap: 0.6rem; border: 0; border-radius: 999px; cursor: pointer;
+             background: var(--accent); color: var(--accent-ink); font: 600 1rem var(--sans); padding: 0.75rem 1.25rem; }
+  .rec-btn .dot { width: 0.8rem; height: 0.8rem; border-radius: 50%; background: currentColor; }
+  .recording .rec-btn { background: var(--rec); color: #fff; }
+  .recording .rec-btn .dot { border-radius: 2px; }
+  .rec-btn:disabled { opacity: 0.55; cursor: default; }
+  canvas { width: 100%; height: 2.75rem; display: block; }
+  .timer { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+  .recording .timer { color: var(--ink); }
+  .file-row { margin: 0.9rem 0 0 1.25rem; color: var(--muted); font-size: 0.95rem; }
+  .file-row label { color: var(--accent); text-decoration: underline; text-underline-offset: 0.15em; cursor: pointer; }
+  .file-row input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .file-row input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .result { margin-top: 2rem; min-height: 7rem; border-left: 3px solid var(--line); padding: 0.25rem 0 0.25rem 1.25rem; }
+  .result.done { border-left-color: var(--accent); }
+  .result.error { border-left-color: var(--bad); }
+  .transcript { font: 1.45rem/1.6 var(--serif); margin: 0; overflow-wrap: anywhere; }
+  .placeholder, .meta { color: var(--muted); margin: 0.5rem 0 0; font-size: 0.95rem; }
+  .error .transcript { font: 1rem/1.55 var(--sans); color: var(--bad); }
+
+  .bars { display: grid; grid-template-columns: max-content 1fr 3.5rem; row-gap: 0.55rem; margin: 1.25rem 0; }
+  .row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 1rem; align-items: center; }
+  .bar { height: 0.7rem; border-radius: 999px; background: var(--line); }
+  .bar span { display: block; height: 100%; border-radius: inherit; background: var(--muted); }
+  .bars .ours { color: var(--accent); font-weight: 650; }
+  .bars .bar.ours span { background: var(--accent); }
+  .num { font-variant-numeric: tabular-nums; text-align: right; }
+  ul { padding-left: 1.2rem; } li { margin: 0.35rem 0; }
+  .fine { color: var(--muted); font-size: 0.9rem; margin-top: 3rem; }
+  @media (max-width: 34rem) {
+    main { padding-top: 1.5rem; }
+    h1 { font-size: 1.55rem; }
+    .recorder { grid-template-columns: auto 1fr; border-radius: 1.25rem; padding: 0.5rem 1rem 0.75rem 0.5rem; }
+    canvas { grid-column: 1 / -1; order: 3; }
+    .bars { grid-template-columns: 1fr; row-gap: 0.9rem; }
+    .row { grid-template-columns: 1fr 3.5rem; row-gap: 0.3rem; }
+    .row .bar { grid-column: 1 / -1; grid-row: 2; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <nav aria-label="Project links">
+      <a href="https://huggingface.co/mddalwai/whisper-small-edacc">Model card</a>
+      <a href="https://github.com/mohammaddalwai/speech-ft">Code and full results</a>
+    </nav>
+    <h1>Transcribe up to 30 seconds of English speech</h1>
+    <p class="lede">Whisper-small, fine-tuned on video-call conversations between speakers of many English accents.
+      It writes what is said word for word: lowercase, no punctuation, fillers and repeats included.</p>
+  </header>
+
+  <section aria-label="Recorder">
+    <div class="recorder" id="recorder">
+      <button class="rec-btn" id="rec" type="button"><span class="dot" aria-hidden="true"></span><span id="rec-label">Record</span></button>
+      <canvas id="wave" aria-hidden="true"></canvas>
+      <span class="timer" id="timer" aria-live="off">0:00 / 0:30</span>
+    </div>
+    <p class="file-row">Or <input type="file" id="file" accept="audio/*,video/webm,.m4a,.mp3,.wav,.ogg,.flac,.webm">
+      <label for="file">choose an audio file</label> (up to 30 s and 10 MB).</p>
+  </section>
+
+  <section class="result" id="result" aria-live="polite">
+    <p class="transcript" id="text"></p>
+    <p class="placeholder" id="hint">The transcript appears here.</p>
+    <p class="meta" id="meta" hidden></p>
+  </section>
+
+  <section>
+    <h2>How accurate it is</h2>
+    <p>Word error rate on 28 speakers the model never heard in training (EdAcc test split; lower is better):</p>
+    <div class="bars" role="table" aria-label="Word error rate by model">
+      <div class="row" role="row"><span role="cell">Whisper-small, original</span><div class="bar" role="presentation"><span style="width:90%"></span></div><span class="num" role="cell">22.5%</span></div>
+      <div class="row" role="row"><span role="cell">Whisper-large-v3-turbo, 3.3 times larger</span><div class="bar" role="presentation"><span style="width:72.8%"></span></div><span class="num" role="cell">18.2%</span></div>
+      <div class="row" role="row"><span role="cell" class="ours">This model</span><div class="bar ours" role="presentation"><span style="width:65.2%"></span></div><span class="num ours" role="cell">16.3%</span></div>
+    </div>
+    <p>It beats the larger model on these speakers but ties it on the validation speakers, so treat the two as on par.
+      Most of the gain comes from
+      writing speech word for word, including the fillers and repeats the original model skips, rather than from
+      hearing accents better.</p>
+    <h2>Limits</h2>
+    <ul>
+      <li>Clips of up to 30 s only. No punctuation or capitals.</li>
+      <li>Somewhat worse than the original Whisper-small on read speech such as audiobooks.</li>
+      <li>Each accent group had only 2 to 6 test speakers, so per-accent results are rough.</li>
+      <li>Not for medical, legal or other high-stakes use, or as unreviewed captions.</li>
+    </ul>
+    <p class="fine">Your audio is transcribed in memory and is never stored or logged.</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const LIMIT_S = 29.5, MAX_BYTES = 10e6;
+  const $ = (id) => document.getElementById(id);
+  const recorder = $("recorder"), btn = $("rec"), label = $("rec-label"), timer = $("timer");
+  const canvas = $("wave"), ctx = canvas.getContext("2d");
+  const result = $("result"), text = $("text"), hint = $("hint"), meta = $("meta");
+  let rec = null, stream = null, audioCtx = null, raf = 0, started = 0, levels = [];
+
+  const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  function draw() {
+    const w = canvas.clientWidth, h = canvas.clientHeight, dpr = window.devicePixelRatio || 1;
+    if (canvas.width !== w * dpr) { canvas.width = w * dpr; canvas.height = h * dpr; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const step = 4, n = Math.floor(w / step), recent = levels.slice(-n);
+    ctx.fillStyle = rec ? css("--rec") : css("--line");
+    for (let i = 0; i < n; i++) {
+      const v = recent[i - (n - recent.length)] ?? 0;
+      const bh = Math.max(2, v * h);
+      ctx.fillRect(i * step, (h - bh) / 2, 2, bh);
+    }
+  }
+
+  function show(kind, main, sub) {
+    result.className = "result " + kind;
+    text.textContent = main;
+    hint.hidden = kind !== "";
+    meta.hidden = !sub; meta.textContent = sub || "";
+  }
+
+  async function send(blob) {
+    if (blob.size > MAX_BYTES) return show("error", "This file is larger than 10 MB. Choose a shorter clip.");
+    show("busy", "", "Transcribing…"); hint.hidden = true;
+    btn.disabled = true;
+    try {
+      const r = await fetch("transcribe", { method: "POST", body: blob });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        const reason = body.detail || `the server answered ${r.status}`;
+        return show("error", `Could not transcribe this clip: ${reason}.`);
+      }
+      show("done", body.text || "(no speech recognised)",
+           `${body.audio_seconds.toFixed(1)} s of audio, transcribed in ${body.processing_seconds.toFixed(1)} s.`);
+    } catch (e) {
+      show("error", "Could not reach the server. Check your connection and try again.");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function tick() {
+    const s = (performance.now() - started) / 1000;
+    timer.textContent = `${fmt(s)} / 0:30`;
+    if (s >= LIMIT_S) return stop();
+    draw();
+    raf = requestAnimationFrame(tick);
+  }
+
+  async function start() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      return show("error", "Microphone access is blocked. Allow it in your browser's site settings, or choose a file instead.");
+    }
+    audioCtx = new AudioContext();
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 1024;
+    audioCtx.createMediaStreamSource(stream).connect(analyser);
+    const buf = new Float32Array(analyser.fftSize);
+    levels = [];
+    const sample = setInterval(() => {
+      analyser.getFloatTimeDomainData(buf);
+      let peak = 0; for (const x of buf) peak = Math.max(peak, Math.abs(x));
+      levels.push(Math.min(1, peak * 1.6));
+    }, 50);
+
+    const chunks = [];
+    rec = new MediaRecorder(stream);
+    rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    rec.onstop = () => {
+      clearInterval(sample);
+      stream.getTracks().forEach((t) => t.stop());
+      audioCtx.close();
+      send(new Blob(chunks, { type: rec.mimeType }));
+      rec = null; draw();
+    };
+    rec.start();
+    started = performance.now();
+    recorder.classList.add("recording");
+    label.textContent = "Stop";
+    raf = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    cancelAnimationFrame(raf);
+    recorder.classList.remove("recording");
+    label.textContent = "Record";
+    if (rec && rec.state !== "inactive") rec.stop();
+  }
+
+  btn.addEventListener("click", () => (rec ? stop() : start()));
+  $("file").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) send(f); e.target.value = ""; });
+  if (!window.MediaRecorder || !navigator.mediaDevices) { btn.disabled = true; label.textContent = "Recording not supported"; }
+  window.addEventListener("resize", draw);
+  draw();
+})();
+</script>
+</body>
+</html>

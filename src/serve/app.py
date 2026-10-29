@@ -6,6 +6,7 @@
 POST /transcribe  body = the audio file itself (any common format, at most 30 s and MAX_UPLOAD_MB).
                   The upload limit is enforced while the body streams in, and the audio stays in memory.
 GET  /health      200 once the model is loaded and warmed up, with load and warm-up times (cold start).
+GET  /            the demo page (src/serve/static/index.html): record or upload a clip, see the transcript.
 
 One model per process, one transcription at a time (whisper-small is CPU-bound). A request waits at most
 QUEUE_WAIT_S for its turn (else 503) and gets its answer within TIMEOUT_S (else 504). Logs hold timings only,
@@ -17,14 +18,23 @@ import os
 import time
 from contextlib import asynccontextmanager
 
+import pathlib
+
 import numpy as np
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
 
 from src import asr
 from src.serve import audio
 
+PAGE = (pathlib.Path(__file__).parent / "static" / "index.html").read_text()
+
+# Libraries log at WARNING only: faster-whisper would log "Processing audio with duration 00:30.000" for every
+# request (always 30 s, because of the padding), huggingface_hub every download request. Our own lines: timings.
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("speech-ft")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+log.setLevel(logging.INFO)
+logging.getLogger("faster_whisper").setLevel(logging.WARNING)
 
 
 def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc-ct2", compute_type="int8",
@@ -45,6 +55,10 @@ def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc
         yield
 
     app = FastAPI(title="speech-ft", lifespan=lifespan)
+
+    @app.get("/", response_class=HTMLResponse)
+    def page():
+        return PAGE
 
     @app.get("/health")
     def health(request: Request):
