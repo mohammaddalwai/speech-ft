@@ -2,6 +2,8 @@
 
     python scripts/publish_model.py --ct2 ct2/E3-int8 --compute-type int8            # build + check, no upload
     python scripts/publish_model.py --ct2 ct2/E3-int8 --compute-type int8 --upload   # then publish
+    python scripts/publish_model.py --ct2 ct2/E3-int8 --compute-type int8 --card-only [--upload]
+        # only the two model cards (README.md): no model download, no ct2 folder needed, runs on the Mac
 
 Builds two folders under release/ and, with --upload, publishes them as PUBLIC repos under your account:
   <user>/whisper-small-edacc       transformers weights + processor files + model card (docs/model_card.md)
@@ -93,6 +95,21 @@ def build(ct2, values, source, out_dir):
     return hf_dir, ct2_dir
 
 
+def update_cards(api, user, values, upload):
+    out = ROOT / "release" / "cards"
+    out.mkdir(parents=True, exist_ok=True)
+    for repo, template in ((f"{user}/whisper-small-edacc", "model_card.md"),
+                           (f"{user}/whisper-small-edacc-ct2", "model_card_ct2.md")):
+        text = fill((ROOT / "docs" / template).read_text(), values)
+        (out / template).write_text(text)
+        if upload:
+            api.upload_file(path_or_fileobj=text.encode(), path_in_repo="README.md", repo_id=repo,
+                            commit_message="Model card update")
+            print(f"updated card of https://huggingface.co/{repo}")
+        else:
+            print(f"wrote {(out / template).relative_to(ROOT)} (not uploaded)")
+
+
 def describe(folder):
     files = sorted(p.name for p in folder.iterdir())
     size_mb = sum(p.stat().st_size for p in folder.iterdir()) / 1e6
@@ -105,6 +122,7 @@ def main():
     ap.add_argument("--compute-type", required=True, choices=["int8", "float32"])
     ap.add_argument("--source", default=SOURCE)
     ap.add_argument("--upload", action="store_true", help="publish; without it, only build and check release/")
+    ap.add_argument("--card-only", action="store_true", help="update only the model cards (README.md)")
     args = ap.parse_args()
 
     from huggingface_hub import HfApi
@@ -114,6 +132,9 @@ def main():
     api = HfApi()
     user = api.whoami()["name"]
     values = card_values(user, args.compute_type, check, control)
+    if args.card_only:
+        update_cards(api, user, values, args.upload)
+        return
     hf_dir, ct2_dir = build(args.ct2, values, args.source, ROOT / "release")
 
     WhisperProcessor.from_pretrained(str(hf_dir))  # fails here, not after publishing, if a file is missing

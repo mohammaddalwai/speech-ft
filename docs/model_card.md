@@ -39,8 +39,10 @@ extra filler and spelling rules (see the repo). Greedy decoding for every model.
 | **This model** | 244M | **16.3%** (3 training seeds: mean 16.8%, std 0.4) | 3.9% / 8.6% |
 
 - vs zero-shot Whisper-small: -6.2 points, 95% interval [-8.7, -4.2] (paired bootstrap over speakers).
-- vs zero-shot large-v3-turbo: -1.9 points, 95% interval [-3.2, -0.7]. On the validation split the two were tied
-  (23.9% vs 23.8%), so the advantage depends on which speakers are tested: read it as "on par with or better than".
+- vs zero-shot large-v3-turbo: -1.9 points, 95% interval [-3.2, -0.7], but this lead is transcription style.
+  Re-scored with repeats removed from both sides, the two tie (0.0 points, [-0.8, +0.9]); with repeats and
+  discourse words ("yeah", "like", "so", ...) also removed, turbo is 1.1 points better ([+0.5, +1.9]). On the
+  validation split they were tied even on the official score (23.9% vs 23.8%).
 - Zero-shot Whisper-small looped on 6 short test clips (under 8 s), repeating a word or phrase until the output
   limit ("no no no ..."), which adds about 1.8 points to its WER. Without the 14 clips where any model looped:
   zero-shot small 20.7%, turbo 17.9%, this model 16.2%
@@ -52,7 +54,9 @@ Word-by-word comparison with zero-shot Whisper-small on the test split: +5.7 poi
 skipped (mostly short common words such as "i", "like", "it", "yeah"; 22% are repeated words), +2.4 from words it got
 wrong and this model gets right, and -2.6 from words it got right and this model gets wrong. **Most of the gain is
 learning EdAcc's word-for-word transcription style and removing looping outputs, not better recognition of accented
-words.** A hand review of the 50 worst test clips found the main remaining causes to be everyday words misheard in
+words.** In the style-controlled re-scoring, this model still beats zero-shot Whisper-small by 3.1 points
+(repeats removed) and 2.1 points (repeats and discourse words removed), on clips of every length; that share may
+come from the accents, the topics or the recording conditions. A hand review of the 50 worst test clips found the main remaining causes to be everyday words misheard in
 fast or accented speech (60% of their errors) and names, titles and rare words (21%).
 
 ## Limitations
@@ -67,7 +71,8 @@ fast or accented speech (60% of their errors) and names, titles and rare words (
   differs.
 - Trained and tested on casual video-call conversations in English. Other domains, noise conditions and
   languages were not tested.
-- Rare looping outputs still happen (1 of 3,351 test clips).
+- Rare looping outputs still happen (1 of 3,351 test clips), and a synthetic clip repeating one sentence several
+  times came back with repeats dropped or added.
 - Not for high-stakes use (medical, legal, safety, or identifying people) and not as unreviewed captions.
 
 ## Training

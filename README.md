@@ -1,4 +1,4 @@
-# Whisper-small fine-tuned for accented conversational English
+# Whisper-small fine-tuned for accented conversational English (EdAcc)
 
 I fine-tuned OpenAI's Whisper-small (244M parameters) on real video-call conversations between speakers of many
 English accents ([EdAcc](https://huggingface.co/datasets/edinburghcstr/edacc)), measured it on speakers it never
@@ -24,6 +24,15 @@ EdAcc test split: 28 speakers in 14 conversations that are not in training or va
 | Fine-tuned (E1) | 244M | 17.2% | 9.4% | 4.2% | 3.7% | 4.70% / 10.22% |
 | **Fine-tuned + LibriSpeech replay (E3, shipped)** | 244M | **16.3%** | 9.0% | 4.3% | 2.9% | 3.85% / 8.62% |
 
+Style-controlled re-scoring of the same test outputs (the same transform on reference and output; clips whose
+reference becomes empty are dropped for every system):
+
+| Scoring | Zero-shot small | Zero-shot turbo | E3 | E3 vs small | E3 vs turbo |
+|---|---|---|---|---|---|
+| Official | 22.5% | 18.2% | 16.3% | -6.2 [-8.7, -4.2] | -1.9 [-3.2, -0.7] |
+| Repeats removed | 19.3% | 16.2% | 16.1% | -3.1 [-4.0, -2.2] | 0.0 [-0.8, +0.9] |
+| Repeats and discourse words removed | 18.7% | 15.5% | 16.6% | -2.1 [-3.0, -1.2] | +1.1 [+0.5, +1.9] |
+
 ![Test WER by accent group](results/figures/test_wer_by_group.png)
 
 How to read this:
@@ -31,18 +40,28 @@ How to read this:
 - **The gain over the base model is large and solid.** E3 vs zero-shot small: -6.2 points, 95% interval
   [-8.7, -4.2] (paired bootstrap over speakers, 2,000 resamples). All 3 training seeds land at 16.3%, 16.8% and
   17.1% (mean 16.75%, std 0.41).
-- **Against large-v3-turbo, a model 3.3 times larger, call it on par.** E3 is 1.9 points better on test
-  ([-3.2, -0.7]) but tied on validation (23.9% vs 23.8%), so the edge depends on which speakers are tested.
+- **Against large-v3-turbo (3.3 times larger), the lead is transcription style, not hearing.** E3 is 1.9 points
+  better on the official score ([-3.2, -0.7]), but turbo was never taught EdAcc's word-for-word conventions. In a
+  re-scoring with repeats removed from both sides they tie (0.0 points, [-0.8, +0.9]); with repeats and discourse
+  words such as "yeah" and "like" also removed, turbo is 1.1 points better ([+0.5, +1.9]). On validation they were
+  tied even on the official score (23.9% vs 23.8%).
 - **Most of the gain is transcription style, not better hearing.** Deletions fall from 11.1% to 4.3%, while
   substitutions rise from 7.8% to 9.0%. Word by word against zero-shot small: +5.7 points from words the base
   model skipped (short common words like "i", "like", "yeah"; 22% are repeats), +2.4 from words it got wrong,
   -2.6 from words it used to get right. Turbo still mishears fewer words (6.2% substitutions vs 9.0%); E3 wins
   by writing down everything EdAcc's word-for-word transcripts contain.
+- **Part of the gain over the base model is real.** In the same style-controlled re-scoring, E3 still beats
+  zero-shot small by 3.1 points with repeats removed ([-4.0, -2.2]) and by 2.1 points with discourse words also
+  removed ([-3.0, -1.2]), on clips of every length. Removing repeats also removes looped text, so this share is
+  not style or loops. It may come from the accents, the conversational topics or the recording conditions; this
+  data cannot separate them. (The re-scoring was added after the test results, with its rule fixed before it was
+  computed: [scripts/style_check.py](scripts/style_check.py).)
 - **Some of the gain is the base model looping.** Zero-shot small looped on 6 short test clips ("no no no ..."
   until the output limit). Without the 14 clips where any model looped: small 20.7%, turbo 17.9%, E3 16.2%
   (a check done after seeing the results, shown next to the official numbers, not instead of them).
-- **Fine-tuning hurts read speech; replay limits the damage.** E1 was 41% / 37% worse (relative) than the base on
-  LibriSpeech. Mixing 15% LibriSpeech clips into training (E3) cut that to about 16% on both sets. E3 was chosen
+- **Fine-tuning hurts read speech; replay limits the damage.** E1's LibriSpeech WER was 41% (clean) and 37%
+  (other) higher than the base model's. Mixing 15% LibriSpeech clips into training (E3) cut that rise to about 16%
+  on both sets. E3 was chosen
   for this, by a rule fixed before training; its 0.9-point test edge over E1 is within seed noise.
 - **First language (the comparison fixed in advance):** speakers with English as a first language (11) vs the
   rest (17): zero-shot small 23.4% vs 21.5%, turbo 18.4% vs 18.0%, E3 17.9% vs 14.5%. With this few speakers
@@ -64,7 +83,8 @@ How to read this:
    checkpoint by validation WER. About 40 minutes per run on one A100. E3 adds 2,077 LibriSpeech
    train-clean-100 clips (7.4 h, 15% of clips) as replay. Three seeds of E3.
 5. **Evaluation.** The test split was used once, for all systems in one session. Paired speaker bootstrap,
-   seed spread, the forgetting check on LibriSpeech, a loop check, and a word-by-word comparison of what changed.
+   seed spread, the forgetting check on LibriSpeech, a loop check, a word-by-word comparison of what changed,
+   and a re-scoring with transcription style removed (table below).
 6. **Error analysis.** I labelled the 50 worst test clips by hand (they hold 9.6% of all errors): everyday
    words misheard in fast or accented speech 59.5% of their errors, names and rare words 20.7%, bleeped words
    6.9%, looping text 4.6%, reference errors 3.1%. Short clips are the hardest: under 1 s, WER is 80.1% (small),

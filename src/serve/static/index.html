@@ -105,10 +105,9 @@
       <div class="row" role="row"><span role="cell">Whisper-large-v3-turbo, 3.3 times larger</span><div class="bar" role="presentation"><span style="width:72.8%"></span></div><span class="num" role="cell">18.2%</span></div>
       <div class="row" role="row"><span role="cell" class="ours">This model</span><div class="bar ours" role="presentation"><span style="width:65.2%"></span></div><span class="num ours" role="cell">16.3%</span></div>
     </div>
-    <p>It beats the larger model on these speakers but ties it on the validation speakers, so treat the two as on par.
-      Most of the gain comes from
-      writing speech word for word, including the fillers and repeats the original model skips, rather than from
-      hearing accents better.</p>
+    <p>Much of this lead comes from writing speech word for word, as the test transcripts do. With repeats and words like
+      "yeah" and "like" removed from both sides, this model is still 2 to 3 points better than the original Whisper-small,
+      but no better than the larger model.</p>
     <h2>Limits</h2>
     <ul>
       <li>Clips of up to 30 s only. No punctuation or capitals.</li>
