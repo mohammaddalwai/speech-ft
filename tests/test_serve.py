@@ -106,3 +106,17 @@ def test_page_is_served():
         r = c.get("/")
     assert r.status_code == 200 and "text/html" in r.headers["content-type"]
     assert 'fetch("transcribe"' in r.text and "never stored or logged" in r.text
+
+
+def test_serving_code_only_uses_files_the_image_copies():
+    """The Dockerfile copies src/__init__.py, src/asr.py and src/serve/ only (see .dockerignore). Importing
+    anything else from the project (e.g. src/data.py, which needs the training libraries) would break the image."""
+    import subprocess
+
+    root = pathlib.Path(__file__).resolve().parents[1]
+    code = "import sys, src.serve.app; print(sorted(m for m in sys.modules if m == 'src' or m.startswith('src.')))"
+    out = subprocess.run([sys.executable, "-c", code], cwd=root, capture_output=True, text=True, check=True).stdout
+    assert eval(out) == ["src", "src.asr", "src.serve", "src.serve.app", "src.serve.audio"]
+    allowed = (root / ".dockerignore").read_text()
+    for path in ("!src/__init__.py", "!src/asr.py", "!src/serve/", "!configs/decode.yaml", "!requirements-serve.lock"):
+        assert path in allowed

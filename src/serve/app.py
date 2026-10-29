@@ -37,9 +37,10 @@ log.setLevel(logging.INFO)
 logging.getLogger("faster_whisper").setLevel(logging.WARNING)
 
 
-def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc-ct2", compute_type="int8",
+def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc-ct2", model_label=None, compute_type="int8",
                cpu_threads=0, max_upload_mb=10.0, max_seconds=30.0, timeout_s=60.0, queue_wait_s=30.0):
     max_bytes = int(max_upload_mb * 1e6)
+    label = model_label or model_id  # e.g. "repo@commit" when model_id is a local folder baked into the image
     settings = asr.decode_settings()
 
     @asynccontextmanager
@@ -50,7 +51,7 @@ def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc
         asr.transcribe(app.state.model, np.zeros(audio.SR, dtype=np.float32), settings)  # first call is slow
         app.state.load_s, app.state.warmup_s = round(t1 - t0, 2), round(time.perf_counter() - t1, 2)
         app.state.turn = asyncio.Semaphore(1)
-        log.info("model %s (%s) loaded in %.2f s, warm-up %.2f s", model_id, compute_type,
+        log.info("model %s (%s) loaded in %.2f s, warm-up %.2f s", label, compute_type,
                  app.state.load_s, app.state.warmup_s)
         yield
 
@@ -63,7 +64,7 @@ def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc
     @app.get("/health")
     def health(request: Request):
         s = request.app.state
-        return {"status": "ok", "model": model_id, "compute_type": compute_type,
+        return {"status": "ok", "model": label, "compute_type": compute_type,
                 "serving_version": asr.SERVING_VERSION, "load_seconds": s.load_s, "warmup_seconds": s.warmup_s}
 
     async def read_body(request):
@@ -104,7 +105,7 @@ def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc
         audio_s = len(wav) / audio.SR
         log.info("transcribed %.2f s of audio in %.2f s (RTF %.3f)", audio_s, secs, secs / audio_s)
         return {"text": text, "audio_seconds": round(audio_s, 2), "processing_seconds": round(secs, 3),
-                "real_time_factor": round(secs / audio_s, 3), "model": model_id, "compute_type": compute_type,
+                "real_time_factor": round(secs / audio_s, 3), "model": label, "compute_type": compute_type,
                 "serving_version": asr.SERVING_VERSION}
 
     return app
@@ -112,7 +113,7 @@ def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc
 
 def env_app():
     e = os.environ.get
-    return create_app(model_id=e("MODEL_ID", "mddalwai/whisper-small-edacc-ct2"),
+    return create_app(model_id=e("MODEL_ID", "mddalwai/whisper-small-edacc-ct2"), model_label=e("MODEL_LABEL"),
                       compute_type=e("COMPUTE_TYPE", "int8"), cpu_threads=int(e("CPU_THREADS", "0")),
                       max_upload_mb=float(e("MAX_UPLOAD_MB", "10")), timeout_s=float(e("TIMEOUT_S", "60")),
                       queue_wait_s=float(e("QUEUE_WAIT_S", "30")))

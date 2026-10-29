@@ -1,0 +1,8 @@
+# Only what the serving image needs. No data, results, checkpoints or audio ever enter the build.
+*
+!requirements-serve.lock
+!configs/decode.yaml
+!src/__init__.py
+!src/asr.py
+!src/serve/
+**/__pycache__
