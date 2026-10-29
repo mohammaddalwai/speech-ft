@@ -51,6 +51,7 @@ def test_health_reports_model_and_cold_start():
     body = r.json()
     assert body["status"] == "ok" and body["serving_version"] == asr.SERVING_VERSION
     assert body["load_seconds"] >= 0 and body["warmup_seconds"] >= 0
+    assert body["cpu_threads"] == 0 and body["cpus_visible"] >= 1
 
 
 def test_transcribe_returns_text_and_timings():
@@ -120,3 +121,19 @@ def test_serving_code_only_uses_files_the_image_copies():
     allowed = (root / ".dockerignore").read_text()
     for path in ("!src/__init__.py", "!src/asr.py", "!src/serve/", "!configs/decode.yaml", "!requirements-serve.lock"):
         assert path in allowed
+
+
+def test_space_gets_exactly_the_image_files():
+    import importlib.util
+
+    root = pathlib.Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location("publish_space", root / "scripts" / "publish_space.py")
+    ps = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ps)
+    serve_files = {str(p.relative_to(root)) for p in (root / "src" / "serve").rglob("*")
+                   if p.is_file() and "__pycache__" not in p.parts and p.name != ".gitkeep"}
+    assert serve_files <= set(ps.FILES)  # a new serving file must also go to the Space
+    allowed = (root / ".dockerignore").read_text()
+    for f in ps.FILES[1:]:  # everything but the Dockerfile itself is inside the image whitelist
+        assert f"!{f}" in allowed or f"!{f.split('/')[0]}/{f.split('/')[1]}/" in allowed, f
+    assert ps.space_host("mddalwai", "whisper-small-edacc-demo") == "mddalwai-whisper-small-edacc-demo.hf.space"

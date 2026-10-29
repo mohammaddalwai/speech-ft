@@ -64,8 +64,9 @@ def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc
     @app.get("/health")
     def health(request: Request):
         s = request.app.state
-        return {"status": "ok", "model": label, "compute_type": compute_type,
-                "serving_version": asr.SERVING_VERSION, "load_seconds": s.load_s, "warmup_seconds": s.warmup_s}
+        return {"status": "ok", "model": label, "compute_type": compute_type, "cpu_threads": cpu_threads,
+                "cpus_visible": os.cpu_count(), "serving_version": asr.SERVING_VERSION,
+                "load_seconds": s.load_s, "warmup_seconds": s.warmup_s}
 
     async def read_body(request):
         declared = request.headers.get("content-length")
