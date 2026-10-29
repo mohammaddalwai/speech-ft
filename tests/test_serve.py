@@ -52,6 +52,7 @@ def test_health_reports_model_and_cold_start():
     assert body["status"] == "ok" and body["serving_version"] == asr.SERVING_VERSION
     assert body["load_seconds"] >= 0 and body["warmup_seconds"] >= 0
     assert body["cpu_threads"] == 0 and body["cpus_visible"] >= 1
+    assert abs(body["started_at"] - time.time()) < 60
 
 
 def test_transcribe_returns_text_and_timings():

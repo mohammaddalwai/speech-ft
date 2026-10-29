@@ -45,6 +45,7 @@ def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc
 
     @asynccontextmanager
     async def lifespan(app):
+        app.state.started_at = round(time.time(), 1)  # tells a restarted container from the old one
         t0 = time.perf_counter()
         app.state.model = load_model(model_id, compute_type, cpu_threads)
         t1 = time.perf_counter()
@@ -66,7 +67,7 @@ def create_app(load_model=asr.load_model, model_id="mddalwai/whisper-small-edacc
         s = request.app.state
         return {"status": "ok", "model": label, "compute_type": compute_type, "cpu_threads": cpu_threads,
                 "cpus_visible": os.cpu_count(), "serving_version": asr.SERVING_VERSION,
-                "load_seconds": s.load_s, "warmup_seconds": s.warmup_s}
+                "load_seconds": s.load_s, "warmup_seconds": s.warmup_s, "started_at": s.started_at}
 
     async def read_body(request):
         declared = request.headers.get("content-length")
