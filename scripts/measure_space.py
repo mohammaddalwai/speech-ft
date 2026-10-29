@@ -14,6 +14,7 @@ import argparse
 import datetime
 import json
 import pathlib
+import ssl
 import statistics
 import time
 import urllib.error
@@ -24,9 +25,23 @@ URL = "https://mddalwai-whisper-small-edacc-demo.hf.space"
 REPO = "mddalwai/whisper-small-edacc-demo"
 
 
+def ssl_context():
+    """The operating system's certificates (macOS Keychain) via truststore, which huggingface_hub already installs.
+    Python from python.org on macOS ships without certificates, so plain urllib fails with CERTIFICATE_VERIFY_FAILED."""
+    try:
+        import truststore
+
+        return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    except ImportError:
+        return ssl.create_default_context()
+
+
+CTX = ssl_context()
+
+
 def call(path, data=None, timeout=120):
     req = urllib.request.Request(URL + path, data=data, method="POST" if data is not None else "GET")
-    with urllib.request.urlopen(req, timeout=timeout) as r:
+    with urllib.request.urlopen(req, timeout=timeout, context=CTX) as r:
         return json.loads(r.read())
 
 
