@@ -1,0 +1,178 @@
+{
+  "date": "2026-10-28T19:41:03",
+  "url": "https://mddalwai-whisper-small-edacc-demo.hf.space",
+  "health": {
+    "status": "ok",
+    "model": "mddalwai/whisper-small-edacc-ct2@fc9badc32977c997c2468386ec7a3390c60422c1",
+    "compute_type": "int8",
+    "cpu_threads": 2,
+    "cpus_visible": 16,
+    "serving_version": "v2",
+    "load_seconds": 0.48,
+    "warmup_seconds": 2.22,
+    "started_at": 1793241304.7
+  },
+  "repeats": 5,
+  "clips": [
+    {
+      "clip": "nat_1.aiff",
+      "audio_seconds": 2.37,
+      "words": 9,
+      "text": "could you send me the notes from today's meeting",
+      "server_seconds": {
+        "median": 2.062,
+        "max": 2.241,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 2.558,
+        "max": 2.766,
+        "n": 5
+      }
+    },
+    {
+      "clip": "nat_2.aiff",
+      "audio_seconds": 6.8,
+      "words": 24,
+      "text": "i think the main problem was the timeline because nobody agreed on who would review the draft before it went out to the client",
+      "server_seconds": {
+        "median": 2.306,
+        "max": 2.627,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 2.796,
+        "max": 3.197,
+        "n": 5
+      }
+    },
+    {
+      "clip": "nat_3.aiff",
+      "audio_seconds": 11.89,
+      "words": 37,
+      "text": "we tried three different cafes last weekend the first one was too crowded the second had terrible coffee and the third was actually lovely so we stayed there for almost two hours and talked about our plans",
+      "server_seconds": {
+        "median": 2.405,
+        "max": 2.466,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 2.994,
+        "max": 3.174,
+        "n": 5
+      }
+    },
+    {
+      "clip": "nat_4.aiff",
+      "audio_seconds": 13.71,
+      "words": 51,
+      "text": "my brother moved to toronto last year for a new job in software he says the winters are brutal but the people are friendly and the food is amazing he wants me to visit in the summer when the lake is warm enough to swim and the city feels completely different",
+      "server_seconds": {
+        "median": 2.586,
+        "max": 2.902,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 3.251,
+        "max": 3.454,
+        "n": 5
+      }
+    },
+    {
+      "clip": "nat_5.aiff",
+      "audio_seconds": 19.26,
+      "words": 64,
+      "text": "when i started learning to cook i burned almost everything rice was the worst because i never measured the water then a friend showed me a simple trick with her finger and suddenly it worked every time now i cook for my family on sundays and they keep asking for the same three dishes which is flattering but also a little boring for me",
+      "server_seconds": {
+        "median": 2.824,
+        "max": 2.866,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 3.43,
+        "max": 3.642,
+        "n": 5
+      }
+    },
+    {
+      "clip": "tts_01.aiff",
+      "audio_seconds": 2.67,
+      "words": 9,
+      "text": "the quick brown fox jumps over the lazy dog",
+      "server_seconds": {
+        "median": 2.054,
+        "max": 2.272,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 2.49,
+        "max": 2.702,
+        "n": 5
+      }
+    },
+    {
+      "clip": "tts_03.aiff",
+      "audio_seconds": 7.45,
+      "words": 9,
+      "text": "the quick brown fox jumps over the lazy dog",
+      "server_seconds": {
+        "median": 2.049,
+        "max": 2.211,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 2.522,
+        "max": 2.728,
+        "n": 5
+      }
+    },
+    {
+      "clip": "tts_05.aiff",
+      "audio_seconds": 12.25,
+      "words": 9,
+      "text": "the quick brown fox jumps over the lazy dog",
+      "server_seconds": {
+        "median": 2.097,
+        "max": 2.424,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 2.7,
+        "max": 3.177,
+        "n": 5
+      }
+    },
+    {
+      "clip": "tts_07.aiff",
+      "audio_seconds": 17.45,
+      "words": 81,
+      "text": "the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog",
+      "server_seconds": {
+        "median": 3.268,
+        "max": 3.451,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 3.85,
+        "max": 4.098,
+        "n": 5
+      }
+    },
+    {
+      "clip": "tts_09.aiff",
+      "audio_seconds": 22.25,
+      "words": 114,
+      "text": "the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the lazy dog the quick brown fox jumps over the lazy dog",
+      "server_seconds": {
+        "median": 3.479,
+        "max": 4.544,
+        "n": 5
+      },
+      "round_trip_seconds": {
+        "median": 4.173,
+        "max": 5.222,
+        "n": 5
+      }
+    }
+  ]
+}
