@@ -1,4 +1,4 @@
-"""Publish the demo as a Hugging Face Space (Docker SDK, free CPU). Run on the Mac after `hf auth login`.
+"""Publish the demo as a Hugging Face Space (Docker SDK, cpu-basic hardware; needs a PRO account since July 2026). Run on the Mac after `hf auth login`.
 
     python scripts/publish_space.py              # build space/ and show what would be uploaded
     python scripts/publish_space.py --upload     # create or update <user>/whisper-small-edacc-demo (public)
@@ -16,7 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SPACE_NAME = "whisper-small-edacc-demo"
 FILES = ["Dockerfile", "requirements-serve.lock", "configs/decode.yaml", "src/__init__.py", "src/asr.py",
          "src/serve/__init__.py", "src/serve/app.py", "src/serve/audio.py", "src/serve/static/index.html"]
-CPU_THREADS = "2"  # the free CPU Space has 2 vCPUs; more threads than CPUs only adds contention
+CPU_THREADS = "2"  # cpu-basic has 2 vCPUs; more threads than CPUs only adds contention
 
 
 def git(*args):

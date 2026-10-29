@@ -12,7 +12,7 @@ short_description: Whisper-small fine-tuned on accented conversational English
 ---
 
 Demo of [{USER}/whisper-small-edacc](https://huggingface.co/{USER}/whisper-small-edacc), served as the int8
-CTranslate2 version on a free 2-vCPU CPU. Record or upload up to 30 s of English speech; the model writes it word
+CTranslate2 version on basic CPU hardware (cpu-basic, 2 vCPUs). Record or upload up to 30 s of English speech; the model writes it word
 for word in lowercase, fillers included. Results and limitations are in the model card.
 
 The page uses a small HTTP API, which you can call directly:
