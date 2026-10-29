@@ -6,6 +6,7 @@
 latency:    one warm-up request (not counted), then each clip --repeats times in a row. Server time is the
             processing_seconds the service reports (transcription only). Round trip is what a visitor waits for,
             including the upload from this machine and the network.
+            The transcript is saved too (use synthetic or your own speech only, never dataset audio).
 cold-start: restarts the Space through the API (needs `hf auth login`) and times until /health answers from the
             new container (its started_at changes). Includes Hugging Face scheduling and the container start.
 Results go to results/serving/space_<mode>_<n>.json; an existing file is never overwritten.
@@ -78,7 +79,7 @@ def latency(args):
             rows.append({"clip": name, "error": e.code, "detail": e.read().decode()[:200]})
             print(f"{name:14} error {e.code}")
             continue
-        row = {"clip": name, "audio_seconds": r["audio_seconds"], "words": len(r["text"].split()),
+        row = {"clip": name, "audio_seconds": r["audio_seconds"], "words": len(r["text"].split()), "text": r["text"],
                "server_seconds": summarize(server), "round_trip_seconds": summarize(round_trip)}
         rows.append(row)
         s, t = row["server_seconds"], row["round_trip_seconds"]
